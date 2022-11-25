@@ -1,0 +1,11 @@
+[package]
+name = "chrome_driver"
+version = "0.1.0-canary"
+edition = "2021"
+description = "A chrome driver to manage chrome"
+license = "MIT"
+
+[dependencies]
+hyper = "0.14.23"
+tokio = { version = "^1.22.0", features = ["macros", "rt"] }
+warp = "0.3.2"
