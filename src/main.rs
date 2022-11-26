@@ -1,6 +1,6 @@
 use hyper::{Body, Client, Method, Request};
-use warp::{Filter, Rejection, Reply};
 use std::process::Command;
+use warp::{Filter, Rejection, Reply};
 
 type Result<T> = std::result::Result<T, Rejection>;
 
@@ -52,10 +52,7 @@ async fn main() {
     let fork = warp::path("fork").map(|| {
         let mut command = Command::new("chromium-browser");
 
-        let id = if let Ok(child) = command
-            .args(CHROME_ARGS)
-            .spawn()
-        {
+        let id = if let Ok(child) = command.args(CHROME_ARGS).spawn() {
             let cid = child.id();
             println!("CID is {}", child.id());
 
