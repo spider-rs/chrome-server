@@ -10,5 +10,5 @@ exec chrome_driver & chromium-browser --headless --disable-software-rasterizer -
     --disable-background-timer-throttling --disable-notifications --disable-accelerated-2d-canvas --disable-accelerated-video-decode --disable-extensions \
     --disable-popup-blocking --disable-renderer-backgrounding --disable-client-side-phishing-detection --disable-setuid-sandbox \
     --disable-features=TranslateUI BlinkGenPropertyTrees --ignore-certificate-errors --disable-http2 --disable-backgrounding-occluded-windows --no-default-browser-check \
-    --metrics-recording-only --disable-component-extensions-with-background-pages --disable-renderer-backgrounding --disable-threaded-animation \
+    --metrics-recording-only --disable-component-extensions-with-background-pages --disable-threaded-animation \
     --disable-threaded-compositing --enable-background-thread-pool
