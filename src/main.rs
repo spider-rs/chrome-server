@@ -5,7 +5,7 @@ use warp::{Filter, Rejection, Reply};
 type Result<T> = std::result::Result<T, Rejection>;
 
 /// static chrome arguments to start application
-static CHROME_ARGS: [&'static str; 33] = [
+static CHROME_ARGS: [&'static str; 32] = [
     "--headless",
     "--no-sandbox",
     "--no-first-run",
@@ -13,7 +13,6 @@ static CHROME_ARGS: [&'static str; 33] = [
     "--remote-debugging-port=9222",
     "--max-wait-for-load=2500",
     "--hide-scrollbars",
-    "--mute-audio",
     "--allow-running-insecure-content",
     "--autoplay-policy=user-gesture-required",
     "--ignore-certificate-errors",
