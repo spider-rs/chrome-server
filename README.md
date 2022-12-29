@@ -15,7 +15,8 @@ The application will pass alp health checks when using port `6000` to get the st
 
 A side loaded application is required to run chrome on a load balancer, one of the main purposes of the control panel.
 
-## Todo
+The default port is `9222` for chrome.
 
-1. Control chrome instances via http to spin up and down.
-2. opt to build chrome direct without docker.
+## Building without Docker
+
+In order to build without docker set the `BUILD_CHROME` env var to true.

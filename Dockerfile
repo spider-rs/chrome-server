@@ -11,8 +11,7 @@ RUN cargo install --no-default-features --path .
 
 FROM zenika/alpine-chrome
 
-EXPOSE 9222
-EXPOSE 6000
+EXPOSE 9222 6000
 
 USER root
 

@@ -2,7 +2,7 @@
 name = "chrome_driver"
 version = "0.1.0-canary"
 edition = "2021"
-description = "A chrome driver to manage chrome"
+description = "A driver to manage chrome"
 license = "MIT"
 
 [dependencies]
