@@ -5,7 +5,7 @@ use warp::{Filter, Rejection, Reply};
 type Result<T> = std::result::Result<T, Rejection>;
 
 /// static chrome arguments to start application
-static CHROME_ARGS: [&'static str; 26] = [
+static CHROME_ARGS: [&'static str; 33] = [
     "--headless",
     "--no-sandbox",
     "--no-first-run",
@@ -13,25 +13,32 @@ static CHROME_ARGS: [&'static str; 26] = [
     "--remote-debugging-port=9222",
     "--max-wait-for-load=2500",
     "--hide-scrollbars",
+    "--allow-pre-commit-input",
     "--allow-running-insecure-content",
     "--autoplay-policy=user-gesture-required",
     "--ignore-certificate-errors",
     "--no-default-browser-check",
+    "--disable-sync",
     "--disable-default-apps",
     "--disable-storage-reset",
     "--disable-dev-shm-usage",
     "--disable-domain-reliability",
     "--disable-component-update",
     "--disable-background-timer-throttling",
+    "--disable-breakpad",
+    "--disable-ipc-flooding-protection",
     "--disable-accelerated-2d-canvas",
     "--disable-accelerated-video-decode",
     "--disable-extensions",
+    "--metrics-recording-only",
     "--disable-popup-blocking",
     "--disable-setuid-sandbox",
-    "--disable-features=ScriptStreaming,TranslateUI,BlinkGenPropertyTrees",
+    "--use-mock-keychain",
+    "--disable-features=BackForwardCache,AcceptCHFrame,AvoidUnnecessaryBeforeUnloadCheckSync,Translate,ScriptStreaming,PaintHolding,InterestFeedContentSuggestions,BlinkGenPropertyTrees",
     "--disable-backgrounding-occluded-windows",
     "--disable-component-extensions-with-background-pages",
     "--enable-background-thread-pool",
+    "--no-pings"
 ];
 
 #[tokio::main(flavor = "current_thread")]
