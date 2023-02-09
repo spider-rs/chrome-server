@@ -41,7 +41,7 @@ static CHROME_ARGS: [&'static str; 33] = [
     "--no-pings"
 ];
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main]
 async fn main() {
     let base_route = warp::path::end().and_then(handler);
     let fork = warp::path("fork").map(|| {
