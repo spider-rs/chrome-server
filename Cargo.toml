@@ -1,11 +1,12 @@
 [package]
 name = "chrome_driver"
-version = "0.1.0-canary"
+version = "0.1.0"
 edition = "2021"
 description = "A driver to manage chrome"
 license = "MIT"
 
 [dependencies]
 hyper = "0.14.23"
+lazy_static = "1.4.0"
 tokio = { version = "^1.22.0", features = ["macros", "rt-multi-thread"] }
 warp = "0.3.2"

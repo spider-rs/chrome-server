@@ -24,5 +24,6 @@ RUN chmod +x /docker-entrypoint.sh
 USER chrome
 
 ENV REMOTE_ADDRESS=0.0.0.0
+ENV LAUNCH=init
 
 ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]
