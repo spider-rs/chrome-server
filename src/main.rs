@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate lazy_static;
 
-// use hyper::{Body, Client, Method, Request};
 use std::{collections::HashSet, process::Command};
 use warp::{Filter, Rejection, Reply};
 
@@ -55,6 +54,18 @@ static CHROME_ARGS: [&'static str; 40] = [
 
 lazy_static! {
     static ref CHROME_INSTANCES: Mutex<HashSet<u32>> = Mutex::new(HashSet::new());
+}
+
+/// shutdown the chrome instance by process id
+#[cfg(target_os = "windows")]
+fn shutdown(pid: &u32) {
+    let _ = Command::new("taskkill").args(["/PID", &pid.to_string(), "/F"]).spawn();
+}
+
+/// shutdown the chrome instance by process id
+#[cfg(not(target_os = "windows"))]
+fn shutdown(pid: &u32) {
+    let _ = Command::new("kill").args(["-9", &pid.to_string()]).spawn();
 }
 
 /// fork a chrome process
@@ -130,7 +141,7 @@ async fn main() {
 
                 match pid {
                     Some(pid) => {
-                        let _ = Command::new("kill").args(["-9", &pid.to_string()]).spawn();
+                        shutdown(pid);
                     }
                     _ => (),
                 }

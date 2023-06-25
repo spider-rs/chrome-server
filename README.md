@@ -68,3 +68,4 @@ chrome_driver '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' 127
 
 1. Keep track of ports started and bump ports on standard calls to `fork`.
 1. Periodic health checking endpoints to see if instance is alive for cleanup.
+1. Allow local server config changes.
