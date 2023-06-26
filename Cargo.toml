@@ -2,7 +2,7 @@
 name = "chrome_driver"
 version = "0.1.2"
 edition = "2021"
-description = "A driver to manage chrome"
+description = "Chrome proxy driver with API support to manage chrome."
 license = "MIT"
 
 [dependencies]

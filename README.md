@@ -31,21 +31,37 @@ If your running locally use the following to start the args with the first param
 
 ## API
 
-1. POST: `fork` to start a new chrome instance or use `fork/$port` with the port to startup the instance.
-2. POST: `shutdown/$PID` to shutdown the instance. ex: `curl --location --request POST 'http://localhost:6000/shutdown/77057'`
+1. POST: `f/ork` to start a new chrome instance or use `fork/$port` with the port to startup the instance.
+2. POST: `/shutdown/$PID` to shutdown the instance. ex: `curl --location --request POST 'http://localhost:6000/shutdown/77057'`
+3. POST: `/json/version` get the json info of the chrome instance to connect to web sockets.
 
 ### Curl Examples
 
-`fork`
+`/fork`
 
 ```sh
 curl --location --request POST 'http://localhost:6000/fork'
 ```
 
-`shutdown`
+`/shutdown`
 
 ```sh
 curl --location --request POST 'http://localhost:6000/shutdown'
+```
+
+`/json/version`
+
+```sh
+curl --location --request GET 'http://localhost:6000/json/version' \
+--header 'Content-Type: application/json'
+{
+   "Browser": "HeadlessChrome/114.0.5735.133",
+   "Protocol-Version": "1.3",
+   "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/114.0.5735.133 Safari/537.36",
+   "V8-Version": "11.4.183.23",
+   "WebKit-Version": "537.36 (@fbfa2ce68d01b2201d8c667c2e73f648a61c4f4a)",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9222/devtools/browser/74f18759-f4b3-4b1f-a68c-942570542f0e"
+}
 ```
 
 ## Args
@@ -68,4 +84,3 @@ chrome_driver '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' 127
 
 1. Keep track of ports started and bump ports on standard calls to `fork`.
 1. Periodic health checking endpoints to see if instance is alive for cleanup.
-1. Allow local server config changes.
