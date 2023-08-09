@@ -1,12 +1,12 @@
 [package]
 name = "chrome_driver"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
-description = "Chrome proxy driver with API support to manage chrome."
+description = "API to manage chromium headless processes."
 license = "MIT"
 
 [dependencies]
-hyper = "0.14.23"
+hyper = "0.14.27"
 lazy_static = "1.4.0"
-tokio = { version = "^1.22.0", features = ["macros", "rt-multi-thread"] }
-warp = "0.3.2"
+tokio = { version = "^1.29.1", features = ["macros", "rt-multi-thread"] }
+warp = "0.3.5"
