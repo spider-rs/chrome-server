@@ -1,0 +1,33 @@
+FROM rust:alpine3.19 AS rustbuilder
+
+WORKDIR /app
+
+RUN apk upgrade --update-cache --available && \
+    apk add gcc cmake make g++ musl-dev
+
+COPY . .
+
+RUN cargo install --no-default-features --path .
+
+FROM zenika/alpine-chrome
+
+EXPOSE 9222 6000
+
+USER root
+
+COPY --from=rustbuilder /usr/local/cargo/bin/chrome_driver /usr/local/bin/chrome_driver
+COPY ./docker-entrypoint-xvfb.sh /
+
+RUN apk add --no-cache tini curl sudo xvfb dbus
+
+RUN chmod +x /docker-entrypoint-xvfb.sh
+
+USER chrome
+
+ENV DISPLAY=:0
+ENV REMOTE_ADDRESS=0.0.0.0
+ENV LAUNCH=init
+ENV DEFAULT_PORT=9223
+ENV DEFAULT_PORT_SERVER=6001
+
+ENTRYPOINT ["tini", "--", "/docker-entrypoint-xvfb.sh"]
