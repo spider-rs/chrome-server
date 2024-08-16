@@ -9,21 +9,31 @@ COPY . .
 
 RUN cargo install --no-default-features --path .
 
+FROM zenika/alpine-chrome AS playwrightbuilder
+
+EXPOSE 9222 6000
+
+USER root
+
+RUN apk add --no-cache tini curl sudo nodejs npm yarn \
+    && npm install -g playwright \
+    && npx playwright install chromium
+
+RUN PLAYWRIGHT_CHROMIUM_PATH=$(find /root/.cache/ms-playwright | grep "chrome-linux/chrome$") && \
+    cp $PLAYWRIGHT_CHROMIUM_PATH /chromium_path
+
 FROM zenika/alpine-chrome
 
 EXPOSE 9222 6000
 
 USER root
 
-COPY --from=rustbuilder /usr/local/cargo/bin/chrome_driver /usr/local/bin/chrome_driver
+COPY --from=rustbuilder /usr/local/cargo/bin/chrome_server /usr/local/bin/chrome_server
+COPY --from=playwrightbuilder /chromium_path /usr/bin/chromium-browser 
+
 COPY ./docker-entrypoint.sh /
 
-# Install Playwright dependencies
-RUN apk add --no-cache tini curl sudo \
-    && npm install -g npm \
-    && npm install -g playwright \
-    && npx playwright install
-
+RUN apk add --no-cache tini curl sudo
 RUN chmod +x /docker-entrypoint.sh
 
 USER chrome
@@ -32,8 +42,5 @@ ENV REMOTE_ADDRESS=0.0.0.0
 ENV LAUNCH=init
 ENV DEFAULT_PORT=9222
 ENV DEFAULT_PORT_SERVER=6000
-
-# Create a symlink for 'chromium-browser' to point to Playwright's Chromium
-RUN ln -s /usr/bin/chromium-browser /usr/local/bin/chromium-browser
 
 ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]

@@ -12,4 +12,4 @@ echo "Starting Xvfb"
 Xvfb :0 -screen 0 1024x768x16 -nolisten tcp &
 sleep 1
 
-exec chrome_driver chromium-browser $REMOTE_ADDRESS $LAUNCH $DEFAULT_PORT $DEFAULT_PORT_SERVER "false"
+exec chrome_server chromium-browser $REMOTE_ADDRESS $LAUNCH $DEFAULT_PORT $DEFAULT_PORT_SERVER "false"

@@ -31,7 +31,7 @@ In order to build without docker set the `BUILD_CHROME` env var to true.
 
 ## Mac
 
-If your running locally use the following to start the args with the first param `chrome_driver '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'`
+If your running locally use the following to start the args with the first param `chrome_server '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'`
 
 ## API
 
@@ -77,7 +77,7 @@ curl --location --request GET 'http://localhost:6000/json/version' \
 Example to start chrome (all params are optional):
 
 ```sh
-chrome_driver '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' 127.0.0.1 init
+chrome_server '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' 127.0.0.1 init
 # Chrome PID: 87659
 # Chrome server at localhost:6000
 # DevTools listening on ws://127.0.0.1:9222/devtools/browser/c789f9e0-7f65-495d-baee-243eb454ea15

@@ -15,7 +15,7 @@ EXPOSE 9222 6000
 
 USER root
 
-COPY --from=rustbuilder /usr/local/cargo/bin/chrome_driver /usr/local/bin/chrome_driver
+COPY --from=rustbuilder /usr/local/cargo/bin/chrome_server /usr/local/bin/chrome_server
 COPY ./docker-entrypoint.sh /
 
 RUN apk add --no-cache tini curl sudo
