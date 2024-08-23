@@ -140,12 +140,26 @@ async fn hc() -> Result<impl Reply> {
     }
 }
 
+/// Get the default chrome bin location per OS.
+fn get_default_chrome_bin() -> &'static str {
+    if cfg!(target_os = "windows") {
+        "chrome.exe"
+    } else if cfg!(target_os = "macos") {
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    } else if cfg!(target_os = "linux") {
+        "chromium"
+    } else {
+        "chrome"
+    }
+}
+
 #[tokio::main]
 async fn main() {
-    let chrome_path = std::env::args().nth(1).unwrap_or("".to_string());
-    let chrome_address = std::env::args().nth(2).unwrap_or("".to_string());
+    let chrome_path = std::env::args().nth(1).unwrap_or_else(|| {
+        std::env::var("CHROME_PATH").unwrap_or_else(|_| get_default_chrome_bin().to_string())
+    });
+    let chrome_address = std::env::args().nth(2).unwrap_or("127.0.0.1".to_string());
     let auto_start = std::env::args().nth(3).unwrap_or_default();
-
     let chrome_path_1 = chrome_path.clone();
     let chrome_address_1 = chrome_address.clone();
     let chrome_address_2 = chrome_address.clone();

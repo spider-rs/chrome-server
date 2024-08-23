@@ -82,3 +82,20 @@ chrome_server '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' 127
 # Chrome server at localhost:6000
 # DevTools listening on ws://127.0.0.1:9222/devtools/browser/c789f9e0-7f65-495d-baee-243eb454ea15
 ```
+
+### ENV Variables
+
+```sh
+# the chrome path on the OS
+CHROME_PATH=
+# the remote address of the chrome intance
+REMOTE_ADDRESS=
+```
+
+### Docker
+
+You can build this image using the following:
+
+1. Dockerfile (Default)
+1. Dockerfile.playwright (Playwright Custom Chrome)
+1. Dockerfile.xvfb (Virtual Display)
