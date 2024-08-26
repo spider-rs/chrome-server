@@ -58,6 +58,8 @@ curl --location --request POST 'http://localhost:6000/shutdown'
 ```sh
 curl --location --request GET 'http://localhost:6000/json/version' \
 --header 'Content-Type: application/json'
+
+# example output
 {
    "Browser": "HeadlessChrome/114.0.5735.133",
    "Protocol-Version": "1.3",

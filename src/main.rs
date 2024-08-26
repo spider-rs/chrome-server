@@ -182,35 +182,51 @@ async fn main() {
     let fork_with_port = warp::path!("fork" / u32).map(chrome_init_args);
 
     let version = warp::path!("json" / "version").and_then(json_args);
-
     let version_with_port = warp::path!("json" / "version" / u32).and_then(json_args_with_port);
 
-    let shutdown = warp::path!("shutdown" / u32).map(|cid: u32| {
-        match CHROME_INSTANCES.lock() {
+    let shutdown_fn = warp::path!("shutdown" / u32).map(|cid: u32| {
+        let shutdown_id = match CHROME_INSTANCES.lock() {
             Ok(mutx) => {
                 let pid = mutx.get(&cid);
 
                 match pid {
                     Some(pid) => {
                         shutdown(pid);
+                        pid.to_string()
                     }
-                    _ => (),
+                    _ => "0".into(),
+                }
+            }
+            _ => "0".into(),
+        };
+
+        shutdown_id
+    });
+
+    let shutdown_base_fn = || {
+        match CHROME_INSTANCES.lock() {
+            Ok(mutx) => {
+                for pid in mutx.iter() {
+                    shutdown(pid);
                 }
             }
             _ => (),
-        };
-
+        }
         "0"
-    });
+    };
+
+    let shutdown_base_fn = warp::path!("shutdown").map(shutdown_base_fn);
 
     let ctrls = warp::post().and(fork.with(warp::cors().allow_any_origin()));
     let ctrls_fork = warp::post().and(fork_with_port.with(warp::cors().allow_any_origin()));
-    let shutdown = warp::post().and(shutdown.with(warp::cors().allow_any_origin()));
+    let shutdown = warp::post().and(shutdown_fn.with(warp::cors().allow_any_origin()));
+    let shutdown_base = warp::post().and(shutdown_base_fn.with(warp::cors().allow_any_origin()));
     let version_port = warp::post().and(version_with_port.with(warp::cors().allow_any_origin()));
 
     let routes = warp::get()
         .and(health_check)
         .or(shutdown)
+        .or(shutdown_base)
         .or(version)
         .or(ctrls_fork)
         .or(version_port)
