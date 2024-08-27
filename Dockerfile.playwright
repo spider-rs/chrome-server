@@ -19,17 +19,20 @@ RUN apk add --no-cache tini curl sudo nodejs npm yarn \
     && npm install -g playwright \
     && npx playwright install chromium
 
-RUN PLAYWRIGHT_CHROMIUM_PATH=$(find /root/.cache/ms-playwright | grep "chrome-linux/chrome$") && \
-    cp $PLAYWRIGHT_CHROMIUM_PATH /chromium_path
+# FROM zenika/alpine-chrome
 
-FROM zenika/alpine-chrome
+# EXPOSE 9222 6000
 
-EXPOSE 9222 6000
+# USER root
 
-USER root
+# RUN apk add --no-cache tini curl sudo nodejs npm yarn \
+#     && npm install -g playwright \
+#     && npx playwright install chromium
 
 COPY --from=rustbuilder /usr/local/cargo/bin/chrome_server /usr/local/bin/chrome_server
-COPY --from=playwrightbuilder /chromium_path /usr/bin/chromium-browser 
+
+RUN PLAYWRIGHT_CHROMIUM_PATH=$(find /root/.cache/ms-playwright | grep "chrome-linux/chrome$") && \
+    cp $PLAYWRIGHT_CHROMIUM_PATH /chromium_path
 
 COPY ./docker-entrypoint.sh /
 
