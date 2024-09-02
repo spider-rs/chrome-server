@@ -60,8 +60,10 @@ lazy_static! {
             "--remote-debugging-port=9222",
             // *SPECIAL*
             headless,
-            "--no-sandbox",
             "--no-first-run",
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--no-zygote",
             "--hide-scrollbars",
             // "--allow-pre-commit-input",
             "--user-data-dir=~/.config/google-chrome",
@@ -69,10 +71,8 @@ lazy_static! {
             "--autoplay-policy=user-gesture-required",
             "--ignore-certificate-errors",
             "--no-default-browser-check",
-            "--no-zygote",
             "--disable-gpu",
             "--disable-gpu-sandbox",
-            "--disable-setuid-sandbox",
             "--disable-dev-shm-usage", // required or else container will crash not enough memory
             "--disable-threaded-scrolling",
             "--disable-demo-mode",
@@ -121,10 +121,10 @@ lazy_static! {
             "--export-tagged-pdf",
             "--no-pings",
             "--use-gl=swiftshader",
-            "--window-size=1280,720",
+            "--window-size=1920,1080",
             "--disable-vulkan-fallback-to-gl-for-testing",
             "--disable-vulkan-surface",
-            "--disable-features=AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
+            "--disable-features=AudioServiceOutOfProcess,IsolateOrigins,site-per-process,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]
     };
     pub static ref CLIENT: Client<hyper::client::HttpConnector> = {

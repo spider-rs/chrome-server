@@ -21,10 +21,6 @@ A side loaded application is required to run chrome on a load balancer, one of t
 
 The default port is `9222` for chrome.
 
-## Docker
-
-You can use the docker images `a11ywatch/chrome` and `a11ywatch/chrome-xvfb`.
-
 ## Building without Docker
 
 In order to build without docker set the `BUILD_CHROME` env var to true.
