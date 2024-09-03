@@ -121,7 +121,7 @@ lazy_static! {
             "--export-tagged-pdf",
             "--no-pings",
             "--use-gl=swiftshader",
-            "--window-size=1920,1080",
+            "--window-size=1280,720",
             "--disable-vulkan-fallback-to-gl-for-testing",
             "--disable-vulkan-surface",
             "--disable-features=AudioServiceOutOfProcess,IsolateOrigins,site-per-process,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"

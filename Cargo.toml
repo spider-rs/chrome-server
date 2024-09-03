@@ -1,6 +1,6 @@
 [package]
 name = "chrome_server"
-version = "0.1.8"
+version = "0.1.9"
 edition = "2021"
 description = "Chrome proxy API to manage chrome in Cloud Providers"
 license = "MIT"
