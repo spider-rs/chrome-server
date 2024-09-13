@@ -34,7 +34,7 @@ lazy_static! {
 
         default_port
     };
-    pub static ref CHROME_ARGS: [&'static str; 66] = {
+    pub static ref CHROME_ARGS: [&'static str; 67] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -124,6 +124,7 @@ lazy_static! {
             "--window-size=1280,720",
             "--disable-vulkan-fallback-to-gl-for-testing",
             "--disable-vulkan-surface",
+            "--disable-webrtc",
             "--disable-features=AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]
     };
