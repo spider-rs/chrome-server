@@ -79,7 +79,7 @@ lazy_static! {
             "--disable-dinosaur-easter-egg",
             "--disable-fetching-hints-at-navigation-start",
             "--disable-site-isolation-trials",
-            "--disable-web-security",
+            // "--disable-web-security",
             "--disable-threaded-animation",
             "--disable-sync",
             "--disable-print-preview",
@@ -108,7 +108,6 @@ lazy_static! {
             "--disable-field-trial-config",
             "--disable-back-forward-cache",
             "--disable-backgrounding-occluded-windows",
-            // "--enable-automation",
             "--log-level=3",
             "--enable-logging=stderr",
             "--enable-features=SharedArrayBuffer,NetworkService,NetworkServiceInProcess",
@@ -121,13 +120,16 @@ lazy_static! {
             "--export-tagged-pdf",
             "--no-pings",
             "--use-gl=swiftshader",
-            "--window-size=1280,720",
+            "--window-size=1400,820",
             "--disable-vulkan-fallback-to-gl-for-testing",
             "--disable-vulkan-surface",
             "--disable-webrtc",
-            "--disable-features=AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
+            "--disable-blink-features=AutomationControlled",
+            // "--force-fieldtrials=*BackgroundTracing/default/",
+            "--disable-features=InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]
     };
+
     pub static ref CLIENT: Client<hyper::client::HttpConnector> = {
         Client::new()
     };

@@ -4,7 +4,7 @@ set -e
 
 REMOTE_ADDRESS="${REMOTE_ADDRESS:-127.0.0.1}";
 LAUNCH="${LAUNCH:-init}";
-DEFAULT_PORT="${DEFAULT_PORT:-9222}";
+DEFAULT_PORT="${DEFAULT_PORT:-9223}";
 DEFAULT_PORT_SERVER="${DEFAULT_PORT_SERVER:-6000}";
 
 echo "Starting Xvfb"
@@ -12,4 +12,5 @@ echo "Starting Xvfb"
 Xvfb :0 -screen 0 1024x768x16 -nolisten tcp &
 sleep 1
 
-exec chrome_server chromium-browser $REMOTE_ADDRESS $LAUNCH $DEFAULT_PORT $DEFAULT_PORT_SERVER "false"
+exec chrome_server chromium-browser $REMOTE_ADDRESS $LAUNCH $DEFAULT_PORT $DEFAULT_PORT_SERVER "false" &
+socat TCP-LISTEN:9222,fork,reuseaddr TCP:127.0.0.1:9224

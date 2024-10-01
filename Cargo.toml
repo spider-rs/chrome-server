@@ -2,12 +2,25 @@
 name = "chrome_server"
 version = "0.1.9"
 edition = "2021"
+authors = [
+    "j-mendez <jeff@spider.cloud>"
+]
 description = "Chrome proxy API to manage chrome in Cloud Providers"
 license = "MIT"
 repository = "https://github.com/spider-rs/chrome-server"
+documentation = "https://docs.rs/chrome_server"
+categories = ["web-programming", "command-line-utilities"]
 
 [dependencies]
-hyper = "0.14.30"
+hyper = "0.14"
 lazy_static = "1"
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
-warp = "0.3.6"
+reqwest = { version = "0.12", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+string_concat = "0.0.1"
+tokio = { version = "1", features = ["full"] }
+warp = "0.3"
+openssl = { version = "0.10", features = ["vendored"] }
+openssl-sys = { version = "0.9", features = ["vendored"] }
+dotenv = "0.15"
+bytes = "1"

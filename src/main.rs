@@ -2,13 +2,37 @@
 extern crate lazy_static;
 
 mod conf;
+
+use bytes::BytesMut;
 use conf::{CHROME_ARGS, CHROME_INSTANCES, CLIENT, DEFAULT_PORT, DEFAULT_PORT_SERVER, IS_HEALTHY};
 use core::sync::atomic::Ordering;
 use hyper::{Body, Method, Request};
 use std::process::Command;
+use tokio::signal;
+use tokio::sync::oneshot;
 use warp::{Filter, Rejection, Reply};
 
 type Result<T> = std::result::Result<T, Rejection>;
+
+lazy_static::lazy_static! {
+    pub static ref ECS_CONTAINER_METADATA_URI_V4: String = std::env::var("ECS_CONTAINER_METADATA_URI_V4").unwrap_or_default();
+    // this env needs to be overridden by docker
+    pub static ref HOST_NAME: String = std::env::var("HOSTNAME").unwrap_or_default();
+    // pub static ref HOST_NAME: String = String::from("127.0.0.1");
+    static ref ENDPOINT: String = {
+        let default_port = std::env::args()
+            .nth(4)
+            .unwrap_or("9222".into())
+            .parse::<u32>()
+            .unwrap_or_default();
+        let default_port = if default_port == 0 {
+            9222
+        } else {
+            default_port
+        };
+        format!("http://127.0.0.1:{}/json/version", default_port)
+    };
+}
 
 /// shutdown the chrome instance by process id
 #[cfg(target_os = "windows")]
@@ -33,22 +57,16 @@ fn fork(chrome_path: &String, chrome_address: &String, port: Option<u32>) -> Str
         chrome_args[0] = format!("--remote-debugging-address={}", &chrome_address.to_string());
     }
 
-    match port {
-        Some(port) => {
-            chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
-        }
-        _ => (),
-    };
+    if let Some(port) = port {
+        chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
+    }
 
     let id = if let Ok(child) = command.args(chrome_args).spawn() {
         let cid = child.id();
         println!("Chrome PID: {}", cid);
 
-        match CHROME_INSTANCES.lock() {
-            Ok(mut mutx) => {
-                mutx.insert(cid.to_owned());
-            }
-            _ => (),
+        if let Ok(mut mutx) = CHROME_INSTANCES.lock() {
+            mutx.insert(cid.to_owned());
         }
 
         cid
@@ -63,21 +81,7 @@ fn fork(chrome_path: &String, chrome_address: &String, port: Option<u32>) -> Str
 
 /// get json endpoint for chrome instance proxying
 async fn version_handler(endpoint_path: Option<&str>) -> Result<impl Reply> {
-    lazy_static! {
-        static ref ENDPOINT: String = {
-            let default_port = std::env::args()
-                .nth(4)
-                .unwrap_or("9222".into())
-                .parse::<u32>()
-                .unwrap_or_default();
-            let default_port = if default_port == 0 {
-                9222
-            } else {
-                default_port
-            };
-            format!("http://127.0.0.1:{}/json/version", default_port)
-        };
-    }
+    use hyper::body::to_bytes;
     let req = Request::builder()
         .method(Method::GET)
         .uri(endpoint_path.unwrap_or(ENDPOINT.as_str()))
@@ -86,10 +90,70 @@ async fn version_handler(endpoint_path: Option<&str>) -> Result<impl Reply> {
         .unwrap_or_default();
 
     let resp = match CLIENT.request(req).await {
-        Ok(resp) => {
+        Ok(mut resp) => {
             if !IS_HEALTHY.load(Ordering::Relaxed) {
                 IS_HEALTHY.store(true, Ordering::Relaxed);
             }
+
+            if !HOST_NAME.is_empty() {
+                if let Ok(body_bytes) = to_bytes(resp.body_mut()).await {
+                    let buffer = BytesMut::from(&body_bytes[..]);
+                
+                    // Define the target and replacement bytes for 127.0.0.1
+                    let target_host = b"127.0.0.1";
+                    let replacement_host = HOST_NAME.as_bytes();
+                    
+                    // Define the target and replacement bytes for :9223
+                    let target_port = b":9223";
+                    let replacement_port = b":9222";
+
+                    // Temporary buffer for performing replacements
+                    let mut intermediate_buffer = BytesMut::with_capacity(buffer.len());
+                    let mut start = 0;
+                
+                    // First, replace "127.0.0.1" with "HOST_NAME"
+                    while let Some(pos) = buffer[start..]
+                        .windows(target_host.len())
+                        .position(|window| window == target_host)
+                    {
+                        // Append up to the found position
+                        intermediate_buffer.extend_from_slice(&buffer[start..start + pos]);
+                        // Append the replacement host bytes
+                        intermediate_buffer.extend_from_slice(replacement_host);
+                        // Move the start position forward
+                        start += pos + target_host.len();
+                    }
+                    
+                    intermediate_buffer.extend_from_slice(&buffer[start..]);
+                
+                    // Prepare final buffer for port replacement
+                    let mut final_buffer = BytesMut::with_capacity(intermediate_buffer.len());
+                    start = 0;
+                
+                    // Next, replace ":9223" with ":9222"
+                    while let Some(pos) = intermediate_buffer[start..]
+                        .windows(target_port.len())
+                        .position(|window| window == target_port)
+                    {
+                        // Append up to the found position
+                        final_buffer.extend_from_slice(&intermediate_buffer[start..start + pos]);
+                        // Append the replacement port bytes
+                        final_buffer.extend_from_slice(replacement_port);
+                        // Move the start position forward
+                        start += pos + target_port.len();
+                    }
+                    
+                    final_buffer.extend_from_slice(&intermediate_buffer[start..]);
+                
+                    let modified_response = hyper::Response::builder()
+                        .status(resp.status())
+                        .body(Body::from(final_buffer.freeze())) // Freeze the buffer into Bytes
+                        .unwrap_or_default();
+                
+                    return Ok(modified_response);
+                }
+            }
+
             resp
         }
         _ => {
@@ -204,14 +268,12 @@ async fn main() {
     });
 
     let shutdown_base_fn = || {
-        match CHROME_INSTANCES.lock() {
-            Ok(mutx) => {
-                for pid in mutx.iter() {
-                    shutdown(pid);
-                }
+        if let Ok(mutx) = CHROME_INSTANCES.lock() {
+            for pid in mutx.iter() {
+                shutdown(pid);
             }
-            _ => (),
         }
+
         "0"
     };
 
@@ -241,7 +303,31 @@ async fn main() {
         },
         DEFAULT_PORT_SERVER.to_string()
     );
-    warp::serve(routes)
-        .run(([0, 0, 0, 0], DEFAULT_PORT_SERVER.to_owned()))
-        .await;
+
+    let (tx_shutdown, rx_shutdown) = oneshot::channel::<()>();
+
+    let signal_handle = tokio::spawn(async move {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("Failed to setup signal handler")
+            .recv()
+            .await;
+
+        println!("Received termination signal");
+        if tx_shutdown.send(()).is_err() {
+            eprintln!("Failed to send shutdown signal through channel");
+        }
+    });
+
+    let srv = async {
+        tokio::select! {
+            _ = warp::serve(routes)
+            .run(([0, 0, 0, 0], DEFAULT_PORT_SERVER.to_owned())) => eprintln!("Server finished without external shutdown."),
+            _ = rx_shutdown => eprintln!("Received shutdown signal."),
+        }
+    };
+
+    tokio::select! {
+        _ = srv => (),
+        _ = signal_handle => (),
+    }
 }

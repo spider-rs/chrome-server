@@ -1,4 +1,4 @@
-FROM rust:alpine3.19 AS rustbuilder
+FROM rust:alpine3.21 AS rustbuilder
 
 WORKDIR /app
 
@@ -9,7 +9,24 @@ COPY . .
 
 RUN cargo install --no-default-features --path .
 
-FROM zenika/alpine-chrome
+FROM alpine:3.21
+
+# Installs latest Chromium package.
+RUN apk upgrade --no-cache --available \
+    && apk add --no-cache \
+      chromium-swiftshader \
+      ttf-freefont \
+      font-noto-emoji \
+    && apk add --no-cache \
+      --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
+      font-wqy-zenhei
+
+COPY local.conf /etc/fonts/local.conf
+
+# Add Chrome as a user
+RUN mkdir -p /usr/src/app \
+    && adduser -D chrome \
+    && chown -R chrome:chrome /usr/src/app
 
 EXPOSE 9222 6000
 
@@ -18,7 +35,7 @@ USER root
 COPY --from=rustbuilder /usr/local/cargo/bin/chrome_server /usr/local/bin/chrome_server
 COPY ./docker-entrypoint-xvfb.sh /
 
-RUN apk add --no-cache tini curl sudo xvfb dbus
+RUN apk add --no-cache tini curl sudo xvfb dbus socat
 
 RUN chmod +x /docker-entrypoint-xvfb.sh
 
@@ -27,7 +44,7 @@ USER chrome
 ENV DISPLAY=:0
 ENV REMOTE_ADDRESS=0.0.0.0
 ENV LAUNCH=init
-ENV DEFAULT_PORT=9223
+ENV DEFAULT_PORT=9224
 ENV DEFAULT_PORT_SERVER=6001
 
 ENTRYPOINT ["tini", "--", "/docker-entrypoint-xvfb.sh"]

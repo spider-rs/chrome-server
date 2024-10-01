@@ -1,4 +1,4 @@
-FROM rust:alpine3.19 AS rustbuilder
+FROM rust:alpine3.21 AS rustbuilder
 
 WORKDIR /app
 
@@ -9,7 +9,24 @@ COPY . .
 
 RUN cargo install --no-default-features --path .
 
-FROM zenika/alpine-chrome AS playwrightbuilder
+FROM alpine:3.21
+
+# Installs latest Chromium package.
+RUN apk upgrade --no-cache --available \
+    && apk add --no-cache \
+      chromium-swiftshader \
+      ttf-freefont \
+      font-noto-emoji \
+    && apk add --no-cache \
+      --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
+      font-wqy-zenhei
+
+COPY local.conf /etc/fonts/local.conf
+
+# Add Chrome as a user
+RUN mkdir -p /usr/src/app \
+    && adduser -D chrome \
+    && chown -R chrome:chrome /usr/src/app
 
 EXPOSE 9222 6000
 
@@ -36,7 +53,7 @@ RUN PLAYWRIGHT_CHROMIUM_PATH=$(find /root/.cache/ms-playwright | grep "chrome-li
 
 COPY ./docker-entrypoint.sh /
 
-RUN apk add --no-cache tini curl sudo
+RUN apk add --no-cache tini curl sudo socat
 RUN chmod +x /docker-entrypoint.sh
 
 USER chrome
