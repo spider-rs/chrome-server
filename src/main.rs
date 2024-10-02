@@ -53,7 +53,7 @@ fn fork(chrome_path: &String, chrome_address: &String, port: Option<u32>) -> Str
 
         cid
     } else {
-        println!("chrome command didn't start");
+        println!("chrome command didn't start, you should check the chrome path, or you don't have chrome installed");
         0
     }
     .to_string();
