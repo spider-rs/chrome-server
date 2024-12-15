@@ -53,7 +53,7 @@ RUN PLAYWRIGHT_CHROMIUM_PATH=$(find /root/.cache/ms-playwright | grep "chrome-li
 
 COPY ./docker-entrypoint.sh /
 
-RUN apk add --no-cache tini curl sudo socat
+RUN apk add --no-cache tini curl sudo
 RUN chmod +x /docker-entrypoint.sh
 
 USER chrome

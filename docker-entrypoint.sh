@@ -8,7 +8,4 @@ DEFAULT_PORT="${DEFAULT_PORT:-9223}";
 DEFAULT_PORT_SERVER="${DEFAULT_PORT_SERVER:-6000}";
 # HEADLESS="new"
 
-# exec socat TCP4-LISTEN:9222,fork TCP4:127.0.0.1:9223 &
-
-exec chrome_server chromium-browser $REMOTE_ADDRESS $LAUNCH $DEFAULT_PORT $DEFAULT_PORT_SERVER "true" &
-socat TCP-LISTEN:9222,fork,reuseaddr TCP:127.0.0.1:9223
+exec chrome_server chromium-browser $REMOTE_ADDRESS $LAUNCH $DEFAULT_PORT $DEFAULT_PORT_SERVER "true"

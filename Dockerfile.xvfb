@@ -35,7 +35,7 @@ USER root
 COPY --from=rustbuilder /usr/local/cargo/bin/chrome_server /usr/local/bin/chrome_server
 COPY ./docker-entrypoint-xvfb.sh /
 
-RUN apk add --no-cache tini curl sudo xvfb dbus socat
+RUN apk add --no-cache tini curl sudo xvfb dbus
 
 RUN chmod +x /docker-entrypoint-xvfb.sh
 

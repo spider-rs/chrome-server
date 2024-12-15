@@ -9,11 +9,11 @@ lazy_static! {
     pub static ref DEFAULT_PORT: u32 = {
         let default_port = std::env::args()
             .nth(4)
-            .unwrap_or("9222".into())
+            .unwrap_or("9223".into())
             .parse::<u32>()
             .unwrap_or_default();
         let default_port = if default_port == 0 {
-            9222
+            9223
         } else {
             default_port
         };
@@ -132,5 +132,19 @@ lazy_static! {
 
     pub static ref CLIENT: Client<hyper::client::HttpConnector> = {
         Client::new()
+    };
+
+    pub(crate) static ref TARGET_REPLACEMENT: (&'static [u8; 5], &'static[u8; 5]) = {
+        if *DEFAULT_PORT == 9223 {
+            let target_port = b":9223";
+            let replacement_port = b":9222";
+
+            (target_port, replacement_port)
+        } else {
+            let target_port = b":9224";
+            let replacement_port = b":9223";
+
+            (target_port, replacement_port)
+        }
     };
 }

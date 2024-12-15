@@ -1,6 +1,6 @@
 # chrome
 
-Chrome instance and panel to manage startup and shutdowns easily.
+Chrome instance and panel to manage startup and shutdowns easily with new headless remote proxy support.
 
 ## Installation
 
@@ -31,9 +31,9 @@ If your running locally use the following to start the args with the first param
 
 ## API
 
-1. POST: `fork` to start a new chrome instance or use `fork/$port` with the port to startup the instance.
+1. POST: `fork` to start a new chrome instance or use `fork/$port` with the port to startup the instance ex: `curl --location --request POST 'http://localhost:6000/fork/9223'`.
 2. POST: `shutdown/$PID` to shutdown the instance. ex: `curl --location --request POST 'http://localhost:6000/shutdown/77057'`
-3. POST: `/json/version` get the json info of the chrome instance to connect to web sockets.
+3. POST: `/json/version` get the json info of the chrome instance to connect to web sockets ex: `curl --location --request POST 'http://localhost:6000/json/version'`.
 
 ### Curl Examples
 
@@ -97,3 +97,5 @@ You can build this image using the following:
 1. Dockerfile (Default)
 1. Dockerfile.playwright (Playwright Custom Chrome)
 1. Dockerfile.xvfb (Virtual Display)
+
+You need to set the env variable passed in as an arg `HOSTNAME_OVERRIDE` to override the docker container and set it to `host.docker.internal`.

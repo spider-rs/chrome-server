@@ -41,8 +41,8 @@ USER root
 COPY --from=rustbuilder /usr/local/cargo/bin/chrome_server /usr/local/bin/chrome_server
 COPY ./docker-entrypoint.sh /
 
-RUN apk add --no-cache tini curl sudo nss dbus freetype harfbuzz ca-certificates ttf-freefont libxcomposite libxrandr \
-    libxdamage libxext libxshmfence mesa-gl udev socat
+RUN apk add --no-cache tini curl sudo nss dbus freetype harfbuzz ca-certificates libxcomposite libxrandr \
+    libxdamage libxext libxshmfence mesa-gl udev
 
 RUN chmod +x /docker-entrypoint.sh
 
@@ -52,5 +52,6 @@ ENV REMOTE_ADDRESS=0.0.0.0
 ENV LAUNCH=init
 ENV DEFAULT_PORT=9223
 ENV DEFAULT_PORT_SERVER=6000
+# ENV HOSTNAME_OVERRIDE=127.0.0.1
 
 ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]
