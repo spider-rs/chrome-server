@@ -1,10 +1,29 @@
+lazy_static::lazy_static! {
+    /// Entry port to the proxy.
+    static ref ENTRY: &'static str = {
+        if crate::TARGET_REPLACEMENT.1 == b":9223" {
+            "0.0.0.0:9222"
+        } else {
+            "0.0.0.0:9223"
+        }
+    };
+    /// Target chrome server.
+    static ref TARGET: &'static str = {
+        if crate::TARGET_REPLACEMENT.0 == b":9222" {
+            "0.0.0.0:9223"
+        } else {
+            "0.0.0.0:9224"
+        }
+    };
+}
+
 pub(crate) mod proxy {
     use std::net::SocketAddr;
     use tokio::net::{TcpListener, TcpStream};
 
     pub async fn run_proxy() -> std::io::Result<()> {
-        let listener = TcpListener::bind("0.0.0.0:9222").await?;
-        tracing::info!("Proxy Listening on 127.0.0.1:9222");
+        let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
+        tracing::info!("Proxy Listening on {:?}", *crate::proxy::ENTRY);
 
         loop {
             let (mut client_stream, client_addr) = listener.accept().await?;
@@ -31,7 +50,7 @@ pub(crate) mod proxy {
             };
         }
 
-        match TcpStream::connect("127.0.0.1:9223").await {
+        match TcpStream::connect(*crate::proxy::TARGET).await {
             Ok(mut server_stream) => {
                 tokio::io::copy_bidirectional_with_sizes(
                     client_stream,

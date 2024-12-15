@@ -1,6 +1,6 @@
 # chrome
 
-Chrome instance and panel to manage startup and shutdowns easily with new headless remote proxy support.
+Google Chrome server.
 
 ## Installation
 
@@ -8,6 +8,7 @@ Chrome instance and panel to manage startup and shutdowns easily with new headle
 
 ## Usage
 
+1. Runs the latest chrome instance with remote proxy connections.
 1. Can spawn and shutdown multiple chrome instances.
 1. Get chrome ws connections and status.
 
@@ -19,7 +20,7 @@ The application will pass alp health checks when using port `6000` to get the st
 
 A side loaded application is required to run chrome on a load balancer, one of the main purposes of the control panel.
 
-The default port is `9222` for chrome.
+The default port is `9223` for chrome and `9222` for the TCP proxy to connect to the instance due to `0.0.0.0` not being exposed on latest `HeadlessChrome/131.0.6778.139` and up.
 
 ## Building without Docker
 
@@ -57,12 +58,12 @@ curl --location --request GET 'http://localhost:6000/json/version' \
 
 # example output
 {
-   "Browser": "HeadlessChrome/114.0.5735.133",
+   "Browser": "HeadlessChrome/131.0.6778.139",
    "Protocol-Version": "1.3",
-   "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/114.0.5735.133 Safari/537.36",
-   "V8-Version": "11.4.183.23",
-   "WebKit-Version": "537.36 (@fbfa2ce68d01b2201d8c667c2e73f648a61c4f4a)",
-   "webSocketDebuggerUrl": "ws://127.0.0.1:9222/devtools/browser/74f18759-f4b3-4b1f-a68c-942570542f0e"
+   "User-Agent": "Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.139 Safari/537.36",
+   "V8-Version": "13.1.201.16",
+   "WebKit-Version": "537.36 (@c35bbcbd7c2775a12a3f320e05ac0022939b1a8a)",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9222/devtools/browser/43e14f5a-6877-4e2f-846e-ab5801f1b6fc"
 }
 ```
 

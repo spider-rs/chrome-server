@@ -129,11 +129,9 @@ lazy_static! {
             "--disable-features=InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]
     };
-
     pub static ref CLIENT: Client<hyper::client::HttpConnector> = {
         Client::new()
     };
-
     pub(crate) static ref TARGET_REPLACEMENT: (&'static [u8; 5], &'static[u8; 5]) = {
         if *DEFAULT_PORT == 9223 {
             let target_port = b":9223";
@@ -141,6 +139,7 @@ lazy_static! {
 
             (target_port, replacement_port)
         } else {
+            // we need to allow dynamic ports instead of defaulting to standard and xfvb offport.
             let target_port = b":9224";
             let replacement_port = b":9223";
 
