@@ -54,10 +54,18 @@ lazy_static! {
             ""
         };
 
+        let port = if DEFAULT_PORT.eq(&9223) {
+            "--remote-debugging-port=9223"
+        } else if DEFAULT_PORT.eq(&9224) {
+            "--remote-debugging-port=9224"
+        } else {
+            "--remote-debugging-port=9222"
+        };
+
         [
             // *SPECIAL*
             "--remote-debugging-address=0.0.0.0",
-            "--remote-debugging-port=9222",
+            port,
             // *SPECIAL*
             headless,
             "--no-first-run",
