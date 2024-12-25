@@ -1,7 +1,7 @@
 lazy_static::lazy_static! {
     /// Entry port to the proxy.
     static ref ENTRY: &'static str = {
-        if crate::TARGET_REPLACEMENT.1 == b":9223" {
+        if crate::TARGET_REPLACEMENT.0 == b":9223" {
             "0.0.0.0:9222"
         } else {
             "0.0.0.0:9223"
@@ -9,7 +9,7 @@ lazy_static::lazy_static! {
     };
     /// Target chrome server.
     static ref TARGET: &'static str = {
-        if crate::TARGET_REPLACEMENT.0 == b":9222" {
+        if crate::TARGET_REPLACEMENT.1 == b":9222" {
             "0.0.0.0:9223"
         } else {
             "0.0.0.0:9224"
@@ -23,7 +23,7 @@ pub(crate) mod proxy {
 
     pub async fn run_proxy() -> std::io::Result<()> {
         let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
-        tracing::info!("Proxy Listening on {:?}", *crate::proxy::ENTRY);
+        println!("Proxy Listening on {}", *crate::proxy::ENTRY);
 
         loop {
             let (mut client_stream, client_addr) = listener.accept().await?;

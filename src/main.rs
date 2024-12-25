@@ -12,8 +12,7 @@ use conf::{
 use core::sync::atomic::Ordering;
 use hyper::{Body, Method, Request};
 use std::process::Command;
-use tokio::signal;
-use tokio::sync::oneshot;
+use tokio::{signal, sync::oneshot};
 use warp::{Filter, Rejection, Reply};
 
 type Result<T> = std::result::Result<T, Rejection>;

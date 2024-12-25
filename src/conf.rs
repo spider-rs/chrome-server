@@ -140,18 +140,19 @@ lazy_static! {
     pub static ref CLIENT: Client<hyper::client::HttpConnector> = {
         Client::new()
     };
+    /// Return base target and replacement. Target port is the port for chrome.
     pub(crate) static ref TARGET_REPLACEMENT: (&'static [u8; 5], &'static[u8; 5]) = {
         if *DEFAULT_PORT == 9223 {
             let target_port = b":9223";
-            let replacement_port = b":9222";
+            let proxy_port = b":9222";
 
-            (target_port, replacement_port)
+            (target_port, proxy_port)
         } else {
             // we need to allow dynamic ports instead of defaulting to standard and xfvb offport.
             let target_port = b":9224";
-            let replacement_port = b":9223";
+            let proxy_port = b":9223";
 
-            (target_port, replacement_port)
+            (target_port, proxy_port)
         }
     };
 }
