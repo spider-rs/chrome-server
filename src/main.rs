@@ -11,7 +11,8 @@ use conf::{
 };
 use core::sync::atomic::Ordering;
 use hyper::{Body, Method, Request};
-use std::process::Command;
+use std::io::{self, Read};
+use std::process::{Command, Stdio};
 use tokio::{signal, sync::oneshot};
 use warp::{Filter, Rejection, Reply};
 
@@ -34,7 +35,6 @@ lazy_static::lazy_static! {
 
         hostname
     };
-
     static ref ENDPOINT: String = {
         let default_port = std::env::args()
             .nth(4)
@@ -48,6 +48,9 @@ lazy_static::lazy_static! {
         };
         format!("http://127.0.0.1:{}/json/version", default_port)
     };
+
+    /// Old headless error.
+    static ref OLD_HEADLESS: &'static str = r#"Old Headless mode has been removed from the Chrome binary. Please use the new Headless mode (https://developer.chrome.com/docs/chromium/new-headless) or the chrome-headless-shell which is a standalone implementation of the old Headless mode (https://developer.chrome.com/blog/chrome-headless-shell)."#;
 }
 
 /// shutdown the chrome instance by process id
@@ -77,8 +80,43 @@ fn fork(chrome_path: &String, chrome_address: &String, port: Option<u32>) -> Str
         chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
     }
 
-    let id = if let Ok(child) = command.args(chrome_args).spawn() {
+    let id = if let Ok(mut child) = command
+        .args(&chrome_args)
+        .stderr(Stdio::piped()) // Capture stdout
+        .spawn()
+    {
         let cid = child.id();
+
+        if let Some(stdout) = child.stderr.take() {
+            let mut reader = io::BufReader::new(stdout);
+            let mut output = String::new();
+
+            if reader.read_to_string(&mut output).is_ok() {
+
+                if output.trim() == *OLD_HEADLESS {
+                    tracing::info!(
+                        "Chrome PID: {} failed to spawn. Attempting headless='new'",
+                        cid
+                    );
+
+                    chrome_args[2] = format!("--headless={}", &"new");
+
+                    if let Ok(child) = command.args(&chrome_args).spawn() {
+                        let cid = child.id();
+                        tracing::info!("Chrome PID: {}", cid);
+
+                        if let Ok(mut mutx) = CHROME_INSTANCES.lock() {
+                            mutx.insert(cid.to_owned());
+                        }
+
+                        return cid.to_string();
+                    }
+                } else {
+                    tracing::error!("Chrome failed to spawn {}", output);
+                }
+            }
+        }
+
         tracing::info!("Chrome PID: {}", cid);
 
         if let Ok(mut mutx) = CHROME_INSTANCES.lock() {

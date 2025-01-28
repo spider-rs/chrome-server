@@ -133,6 +133,7 @@ lazy_static! {
             "--disable-vulkan-surface",
             "--disable-webrtc",
             "--disable-blink-features=AutomationControlled",
+            // "--virtual-time-budget=10000",
             // "--force-fieldtrials=*BackgroundTracing/default/",
             "--disable-features=InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]
