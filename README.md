@@ -105,3 +105,7 @@ You need to set the env variable passed in as an arg `HOSTNAME_OVERRIDE` to over
 
 Get the docker image [spiderrust/chrome](https://hub.docker.com/repository/docker/spiderrust/chrome/general).
 
+### Headless Shell
+
+This project takes the build scripts from [chromedp](https://github.com/chromedp/docker-headless-shell) to provide an alpine container for the image.
+
