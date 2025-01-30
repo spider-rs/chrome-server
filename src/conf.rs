@@ -34,7 +34,7 @@ lazy_static! {
 
         default_port
     };
-    pub static ref CHROME_ARGS: [&'static str; 67] = {
+    pub static ref CHROME_ARGS: [&'static str; 68] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -87,7 +87,7 @@ lazy_static! {
             "--disable-dinosaur-easter-egg",
             "--disable-fetching-hints-at-navigation-start",
             "--disable-site-isolation-trials",
-            // "--disable-web-security",
+            "--disable-web-security",
             "--disable-threaded-animation",
             "--disable-sync",
             "--disable-print-preview",
