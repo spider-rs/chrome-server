@@ -88,6 +88,8 @@ You can build this image using the following:
 
 1. Dockerfile (Default)
 1. Dockerfile.playwright (Playwright Custom Chrome)
+1. Dockerfile.headless_shell (Manual)
+1. Dockerfile.headless_shell_playwright (Playwright Headless Shell)
 1. Dockerfile.xvfb (Virtual Display)
 
 You need to set the env variable passed in as an arg `HOSTNAME_OVERRIDE` to override the docker container and set it to `host.docker.internal`.
@@ -100,7 +102,7 @@ Get the docker image [spiderrust/chrome](https://hub.docker.com/repository/docke
 
 If you want to use headless-shell you can use the `Dockerfile.headless_shell_playwright` for an ubuntu based install.
 
-#### Manual 
+#### Manual (WIP)
 
 Use the following to build with docker. 
 Run the command `./build.sh` to build chrome on the machine with docker.
