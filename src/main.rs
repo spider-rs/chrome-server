@@ -48,7 +48,12 @@ lazy_static::lazy_static! {
         };
         format!("http://127.0.0.1:{}/json/version", default_port)
     };
+    /// Auto repair the spawn if errors happen on chrome initial spawn.
+    static ref AUTO_REPAIR: bool = {
+        let repair = std::env::var("AUTO_REPAIR").unwrap_or_else(|_| "false".into());
 
+        repair == "true"
+    };
     /// Old headless error.
     static ref OLD_HEADLESS: &'static str = r#"Old Headless mode has been removed from the Chrome binary. Please use the new Headless mode (https://developer.chrome.com/docs/chromium/new-headless) or the chrome-headless-shell which is a standalone implementation of the old Headless mode (https://developer.chrome.com/blog/chrome-headless-shell)."#;
 }
@@ -80,57 +85,67 @@ fn fork(chrome_path: &String, chrome_address: &String, port: Option<u32>) -> Str
         chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
     }
 
-    let id = if let Ok(mut child) = command
-        .args(&chrome_args)
-        .stderr(Stdio::piped()) // Capture stdout
-        .spawn()
-    {
-        let cid = child.id();
+    let cmd = command.args(&chrome_args);
 
-        if let Some(stdout) = child.stderr.take() {
-            let mut reader = io::BufReader::new(stdout);
-            let mut output = String::new();
+    let id = if *AUTO_REPAIR {
+        if let Ok(mut child) = cmd
+            .stderr(Stdio::piped()) // Capture stdout
+            .spawn()
+        {
+            let cid = child.id();
 
-            if reader.read_to_string(&mut output).is_ok() {
+            tokio::spawn(async move {
+                if let Some(stdout) = child.stderr.take() {
+                    let mut reader = io::BufReader::new(stdout);
+                    let mut output = String::new();
 
-                if output.trim() == *OLD_HEADLESS {
-                    tracing::info!(
-                        "Chrome PID: {} failed to spawn. Attempting headless='new'",
-                        cid
-                    );
+                    if reader.read_to_string(&mut output).is_ok() {
+                        if output.trim() == *OLD_HEADLESS {
+                            tracing::info!(
+                                "Chrome PID: {} failed to spawn. Attempting headless='new'",
+                                cid
+                            );
 
-                    chrome_args[2] = format!("--headless={}", &"new");
+                            chrome_args[2] = format!("--headless={}", &"new");
 
-                    if let Ok(child) = command.args(&chrome_args).spawn() {
-                        let cid = child.id();
-                        tracing::info!("Chrome PID: {}", cid);
+                            if let Ok(child) = command.args(&chrome_args).spawn() {
+                                let cid = child.id();
+                                tracing::info!("Chrome PID: {}", cid);
 
-                        if let Ok(mut mutx) = CHROME_INSTANCES.lock() {
-                            mutx.insert(cid.to_owned());
+                                if let Ok(mut mutx) = CHROME_INSTANCES.lock() {
+                                    mutx.insert(cid.to_owned());
+                                }
+                            }
+                        } else {
+                            tracing::error!("Chrome failed to spawn {}", output);
                         }
-
-                        return cid.to_string();
                     }
-                } else {
-                    tracing::error!("Chrome failed to spawn {}", output);
                 }
-            }
+            });
+
+            tracing::info!("Chrome PID: {}", cid);
+
+            cid
+        } else {
+            tracing::error!("chrome command didn't start");
+            0
         }
-
-        tracing::info!("Chrome PID: {}", cid);
-
-        if let Ok(mut mutx) = CHROME_INSTANCES.lock() {
-            mutx.insert(cid.to_owned());
-        }
-
-        cid
     } else {
-        tracing::error!("chrome command didn't start");
-        0
-    }
-    .to_string();
+        if let Ok(child) = cmd.spawn() {
+            let cid = child.id();
+            tracing::info!("Chrome PID: {}", cid);
+            cid
+        } else {
+            tracing::error!("chrome command didn't start");
+            0
+        }
+    };
 
-    id
+    if let Ok(mut mutx) = CHROME_INSTANCES.lock() {
+        mutx.insert(id.into());
+    }
+
+    id.to_string()
 }
 
 /// get json endpoint for chrome instance proxying
@@ -231,7 +246,14 @@ async fn run_main() {
         std::env::var("CHROME_PATH").unwrap_or_else(|_| get_default_chrome_bin().to_string())
     });
     let chrome_address = std::env::args().nth(2).unwrap_or("127.0.0.1".to_string());
-    let auto_start = std::env::args().nth(3).unwrap_or_default();
+    let auto_start = std::env::args().nth(3).unwrap_or_else(|| {
+        let auto = std::env::var("CHROME_INIT").unwrap_or("false".into());
+        if auto == "true" {
+            "init".into()
+        } else {
+            "ignore".into()
+        }
+    });
     let chrome_path_1 = chrome_path.clone();
     let chrome_address_1 = chrome_address.clone();
     let chrome_address_2 = chrome_address.clone();

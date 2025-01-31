@@ -82,15 +82,6 @@ chrome_server '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' 127
 # DevTools listening on ws://127.0.0.1:9222/devtools/browser/c789f9e0-7f65-495d-baee-243eb454ea15
 ```
 
-### ENV Variables
-
-```sh
-# the chrome path on the OS
-CHROME_PATH=
-# the remote address of the chrome intance
-REMOTE_ADDRESS=
-```
-
 ### Docker
 
 You can build this image using the following:
@@ -107,5 +98,25 @@ Get the docker image [spiderrust/chrome](https://hub.docker.com/repository/docke
 
 ### Headless Shell
 
-This project takes the build scripts from [chromedp](https://github.com/chromedp/docker-headless-shell) to provide an alpine container for the image.
+If you want to use headless-shell you can use the `Dockerfile.headless_shell_playwright` for an ubuntu based install.
 
+#### Manual 
+
+Use the following to build with docker. 
+Run the command `./build.sh` to build chrome on the machine with docker.
+The build scripts are originally from [docker-headless-shell](https://github.com/chromedp/docker-headless-shell).
+
+### ENV Variables
+
+```sh
+# the chrome path on the OS ex: CHROME_PATH=./chrome-headless-shell/mac_arm-132.0.6834.159/chrome-headless-shell-mac-arm64/chrome-headless-shell
+CHROME_PATH=
+# the remote address of the chrome intance
+REMOTE_ADDRESS=
+# auto repair launch attempt
+AUTO_REPAIR=false
+```
+
+## License
+
+MIT

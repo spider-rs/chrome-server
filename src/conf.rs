@@ -62,6 +62,17 @@ lazy_static! {
             "--remote-debugging-port=9222"
         };
 
+        let use_gl = match std::env::var("CHROME_GL") {
+            Ok(h) => {
+                if h == "angle" {
+                    "--use-gl=angle"
+                } else {
+                    "--use-gl=swiftshader"
+                }
+            }
+            _ => "--use-gl=swiftshader"
+        };
+
         [
             // *SPECIAL*
             "--remote-debugging-address=0.0.0.0",
@@ -127,7 +138,7 @@ lazy_static! {
             "--password-store=basic",
             "--export-tagged-pdf",
             "--no-pings",
-            "--use-gl=swiftshader",
+            use_gl,
             "--window-size=1400,820",
             "--disable-vulkan-fallback-to-gl-for-testing",
             "--disable-vulkan-surface",

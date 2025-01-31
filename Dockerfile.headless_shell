@@ -5,21 +5,17 @@ WORKDIR /app
 RUN apk upgrade --update-cache --available && \
     apk add --no-cache gcc make g++ cmake musl-dev perl libressl-dev
 
-COPY . .
+
+COPY src/ ./src
+COPY Cargo.* .
 
 RUN cargo install --no-default-features --path .
 
-FROM alpine:3.21.2
+FROM alpine:3.21
 
-# Installs latest Chromium package.
-RUN apk upgrade --no-cache --available \
-    && apk add --no-cache \
-      chromium-swiftshader \
-      ttf-freefont \
-      font-noto-emoji \
-    && apk add --no-cache \
-      --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
-      font-wqy-zenhei
+ARG VERSION=latest
+
+COPY out/$VERSION/headless-shell/ /headless-shell/
 
 COPY local.conf /etc/fonts/local.conf
 
@@ -32,9 +28,9 @@ USER chrome
 WORKDIR /usr/src/app
 
 ENV CHROME_BIN=/usr/bin/chromium-browser \
-    CHROME_PATH=/usr/lib/chromium/
+    CHROME_PATH=/headless-shell:$PATH
 
-EXPOSE 9222 6000
+EXPOSE 9222 6000 9223
 
 USER root
 
@@ -53,5 +49,6 @@ ENV LAUNCH=init
 ENV DEFAULT_PORT=9223
 ENV DEFAULT_PORT_SERVER=6000
 # ENV HOSTNAME_OVERRIDE=127.0.0.1
+ENV DEFAULT_LAUNCH_NAME=/headless-shell/headless-shell
 
 ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]

@@ -12,3 +12,7 @@ cloudbuild.yaml
 ~
 
 .env
+
+docker-headless-shell
+chrome-headless-shell
+out
