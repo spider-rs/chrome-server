@@ -70,7 +70,7 @@ lazy_static! {
                     "--use-gl=swiftshader"
                 }
             }
-            _ => "--use-gl=swiftshader"
+            _ => "--use-gl=angle"
         };
 
         [
