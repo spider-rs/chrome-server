@@ -34,6 +34,8 @@ lazy_static! {
 
         default_port
     };
+
+    /// The chrome args to use.
     pub static ref CHROME_ARGS: [&'static str; 67] = {
         let headless = std::env::args()
         .nth(6)
@@ -149,6 +151,22 @@ lazy_static! {
             "--disable-features=InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]
     };
+    /// The light panda args to use.
+    pub static ref LIGHTPANDA_ARGS: [&'static str; 2] = {
+        let port = if DEFAULT_PORT.eq(&9223) {
+            "--port=9223"
+        } else if DEFAULT_PORT.eq(&9224) {
+            "--port=9224"
+        } else {
+            "--port=9222"
+        };
+
+        [
+            "--host=0.0.0.0",
+            port,
+        ]
+    };
+
     pub static ref CLIENT: Client<hyper::client::HttpConnector> = {
         Client::new()
     };

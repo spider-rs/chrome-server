@@ -115,8 +115,6 @@ The build scripts are originally from [docker-headless-shell](https://github.com
 CHROME_PATH=
 # the remote address of the chrome intance
 REMOTE_ADDRESS=
-# auto repair launch attempt
-AUTO_REPAIR=false
 ```
 
 ## License

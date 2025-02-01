@@ -7,12 +7,11 @@ mod proxy;
 
 use conf::{
     CHROME_ARGS, CHROME_INSTANCES, CLIENT, DEFAULT_PORT, DEFAULT_PORT_SERVER, IS_HEALTHY,
-    TARGET_REPLACEMENT,
+    LIGHTPANDA_ARGS, TARGET_REPLACEMENT,
 };
 use core::sync::atomic::Ordering;
 use hyper::{Body, Method, Request};
-use std::io::{self, Read};
-use std::process::{Command, Stdio};
+use std::process::Command;
 use tokio::{signal, sync::oneshot};
 use warp::{Filter, Rejection, Reply};
 
@@ -48,14 +47,6 @@ lazy_static::lazy_static! {
         };
         format!("http://127.0.0.1:{}/json/version", default_port)
     };
-    /// Auto repair the spawn if errors happen on chrome initial spawn.
-    static ref AUTO_REPAIR: bool = {
-        let repair = std::env::var("AUTO_REPAIR").unwrap_or_else(|_| "false".into());
-
-        repair == "true"
-    };
-    /// Old headless error.
-    static ref OLD_HEADLESS: &'static str = r#"Old Headless mode has been removed from the Chrome binary. Please use the new Headless mode (https://developer.chrome.com/docs/chromium/new-headless) or the chrome-headless-shell which is a standalone implementation of the old Headless mode (https://developer.chrome.com/blog/chrome-headless-shell)."#;
 }
 
 /// shutdown the chrome instance by process id
@@ -73,72 +64,60 @@ fn shutdown(pid: &u32) {
 }
 
 /// fork a chrome process
-fn fork(chrome_path: &String, chrome_address: &String, port: Option<u32>) -> String {
-    let mut command = Command::new(chrome_path);
-    let mut chrome_args = CHROME_ARGS.map(|e| e.to_string());
+fn fork(
+    chrome_path: &String,
+    chrome_address: &String,
+    port: Option<u32>,
+    lightpanda_build: bool,
+) -> String {
+    let id = if !lightpanda_build {
+        let mut command = Command::new(chrome_path);
+        let mut chrome_args = CHROME_ARGS.map(|e| e.to_string());
+        if !chrome_address.is_empty() {
+            chrome_args[0] = format!("--remote-debugging-address={}", &chrome_address.to_string());
+        }
 
-    if !chrome_address.is_empty() {
-        chrome_args[0] = format!("--remote-debugging-address={}", &chrome_address.to_string());
-    }
+        if let Some(port) = port {
+            chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
+        }
 
-    if let Some(port) = port {
-        chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
-    }
+        let cmd = command.args(&chrome_args);
 
-    let cmd = command.args(&chrome_args);
+        let id = if let Ok(child) = cmd.spawn() {
+            let cid = child.id();
 
-    let id = if *AUTO_REPAIR {
-        if let Ok(mut child) = cmd
-            .stderr(Stdio::piped()) // Capture stdout
+            tracing::info!("Chrome PID: {}", cid);
+
+            cid
+        } else {
+            tracing::error!("chrome command didn't start");
+            0
+        };
+
+        id
+    } else {
+        let panda_args = LIGHTPANDA_ARGS.map(|e| e.to_string());
+        let mut command = Command::new(chrome_path);
+
+        let host = panda_args[0].replace("--host=", "");
+        let port = panda_args[1].replace("--port=", "");
+
+        let id = if let Ok(child) = command
+            .args(["--port", &port])
+            .args(["--host", &host])
             .spawn()
         {
             let cid = child.id();
 
-            tokio::spawn(async move {
-                if let Some(stdout) = child.stderr.take() {
-                    let mut reader = io::BufReader::new(stdout);
-                    let mut output = String::new();
-
-                    if reader.read_to_string(&mut output).is_ok() {
-                        if output.trim() == *OLD_HEADLESS {
-                            tracing::info!(
-                                "Chrome PID: {} failed to spawn. Attempting headless='new'",
-                                cid
-                            );
-
-                            chrome_args[2] = format!("--headless={}", &"new");
-
-                            if let Ok(child) = command.args(&chrome_args).spawn() {
-                                let cid = child.id();
-                                tracing::info!("Chrome PID: {}", cid);
-
-                                if let Ok(mut mutx) = CHROME_INSTANCES.lock() {
-                                    mutx.insert(cid.to_owned());
-                                }
-                            }
-                        } else {
-                            tracing::error!("Chrome failed to spawn {}", output);
-                        }
-                    }
-                }
-            });
-
             tracing::info!("Chrome PID: {}", cid);
 
             cid
         } else {
             tracing::error!("chrome command didn't start");
             0
-        }
-    } else {
-        if let Ok(child) = cmd.spawn() {
-            let cid = child.id();
-            tracing::info!("Chrome PID: {}", cid);
-            cid
-        } else {
-            tracing::error!("chrome command didn't start");
-            0
-        }
+        };
+
+        id
     };
 
     if let Ok(mut mutx) = CHROME_INSTANCES.lock() {
@@ -245,6 +224,11 @@ async fn run_main() {
     let chrome_path = std::env::args().nth(1).unwrap_or_else(|| {
         std::env::var("CHROME_PATH").unwrap_or_else(|_| get_default_chrome_bin().to_string())
     });
+
+    // use an env variable extend.
+    let lightpanda_build =
+        chrome_path.ends_with("lightpanda-aarch64-macos") || chrome_path.ends_with("x86_64-linux");
+
     let chrome_address = std::env::args().nth(2).unwrap_or("127.0.0.1".to_string());
     let auto_start = std::env::args().nth(3).unwrap_or_else(|| {
         let auto = std::env::var("CHROME_INIT").unwrap_or("false".into());
@@ -260,15 +244,27 @@ async fn run_main() {
 
     // init chrome process
     if auto_start == "init" {
-        fork(&chrome_path, &chrome_address_1, Some(*DEFAULT_PORT));
+        fork(
+            &chrome_path,
+            &chrome_address_1,
+            Some(*DEFAULT_PORT),
+            lightpanda_build,
+        );
     }
 
     let health_check = warp::path::end()
         .and_then(hc)
         .with(warp::cors().allow_any_origin());
 
-    let chrome_init = move || fork(&chrome_path, &chrome_address_1, None);
-    let chrome_init_args = move |port: u32| fork(&chrome_path_1, &chrome_address_2, Some(port));
+    let chrome_init = move || fork(&chrome_path, &chrome_address_1, None, lightpanda_build);
+    let chrome_init_args = move |port: u32| {
+        fork(
+            &chrome_path_1,
+            &chrome_address_2,
+            Some(port),
+            lightpanda_build,
+        )
+    };
     let json_args = move || version_handler(None);
     let json_args_with_port = move |port| version_handler_with_path(port);
 
