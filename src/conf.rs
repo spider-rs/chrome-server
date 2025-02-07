@@ -36,7 +36,7 @@ lazy_static! {
     };
 
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 68] = {
+    pub static ref CHROME_ARGS: [&'static str; 67] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -145,7 +145,7 @@ lazy_static! {
             "--disable-vulkan-surface",
             "--disable-webrtc",
             "--disable-blink-features=AutomationControlled",
-            "--disable-ipc-flooding-protection",
+            // "--disable-ipc-flooding-protection",
             // "--virtual-time-budget=10000",
             // "--force-fieldtrials=*BackgroundTracing/default/",
             "--disable-features=InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
