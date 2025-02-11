@@ -36,7 +36,7 @@ lazy_static! {
     };
 
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 67] = {
+    pub static ref CHROME_ARGS: [&'static str; 69] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -100,7 +100,7 @@ lazy_static! {
             "--disable-dinosaur-easter-egg",
             "--disable-fetching-hints-at-navigation-start",
             "--disable-site-isolation-trials",
-            // "--disable-web-security",
+            "--disable-web-security",
             "--disable-threaded-animation",
             "--disable-sync",
             "--disable-print-preview",
@@ -120,6 +120,7 @@ lazy_static! {
             "--disable-extensions",
             "--disable-popup-blocking",
             "--disable-hang-monitor",
+            "--disable-checker-imaging",
             "--disable-image-animation-resync",
             "--disable-client-side-phishing-detection",
             "--disable-component-extensions-with-background-pages",
@@ -148,7 +149,7 @@ lazy_static! {
             "--disable-ipc-flooding-protection",
             // "--virtual-time-budget=10000",
             // "--force-fieldtrials=*BackgroundTracing/default/",
-            "--disable-features=InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
+            "--disable-features=BlinkGenPropertyTrees,InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]
     };
     /// The light panda args to use.
