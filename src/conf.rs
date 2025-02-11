@@ -36,7 +36,7 @@ lazy_static! {
     };
 
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 70] = {
+    pub static ref CHROME_ARGS: [&'static str; 71] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -86,7 +86,7 @@ lazy_static! {
             "--disable-setuid-sandbox",
             "--no-zygote",
             "--hide-scrollbars",
-            // "--allow-pre-commit-input",
+            "--allow-pre-commit-input",
             "--user-data-dir=~/.config/google-chrome",
             "--allow-running-insecure-content",
             "--autoplay-policy=user-gesture-required",
