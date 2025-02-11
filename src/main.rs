@@ -130,6 +130,7 @@ fn fork(
 /// get json endpoint for chrome instance proxying
 async fn version_handler(endpoint_path: Option<&str>) -> Result<impl Reply> {
     use hyper::body::HttpBody;
+
     let req = Request::builder()
         .method(Method::GET)
         .uri(endpoint_path.unwrap_or(ENDPOINT.as_str()))
