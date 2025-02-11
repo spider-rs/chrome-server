@@ -44,13 +44,13 @@ lazy_static! {
         let headless = if headless != "false" {
             match std::env::var("HEADLESS") {
                 Ok(h) => {
-                    if h == "new" {
-                        "--headless=new"
+                    if h == "false" {
+                        ""
                     } else {
-                        "--headless=old"
+                        "--headless"
                     }
                 }
-                _ => "--headless=old"
+                _ => "--headless"
             }
         } else {
             ""
