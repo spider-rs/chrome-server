@@ -5,7 +5,8 @@ WORKDIR /app
 RUN apk upgrade --update-cache --available && \
     apk add --no-cache gcc make g++ cmake musl-dev perl libressl-dev
 
-COPY . .
+COPY src/ ./src
+COPY Cargo.* .
 
 RUN cargo install --no-default-features --path .
 

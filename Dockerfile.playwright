@@ -5,7 +5,8 @@ WORKDIR /app
 RUN apk upgrade --update-cache --available && \
     apk add gcc cmake make g++
 
-COPY . .
+COPY src/ ./src
+COPY Cargo.* .
 
 RUN cargo install --no-default-features --path .
 
