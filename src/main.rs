@@ -143,9 +143,8 @@ async fn version_handler_bytes(endpoint_path: Option<&str>) -> Bytes {
 
     let resp = match CLIENT.request(req).await {
         Ok(mut resp) => {
-            if !IS_HEALTHY.load(Ordering::Relaxed) {
-                IS_HEALTHY.store(true, Ordering::Relaxed);
-            }
+            IS_HEALTHY.store(true, Ordering::Relaxed);
+
             if !HOST_NAME.is_empty() {
                 if let Ok(body_bytes) = resp.body_mut().collect().await {
                     let body = modify::modify_json_output(body_bytes.to_bytes());
