@@ -131,7 +131,7 @@ lazy_static! {
             "--disable-backgrounding-occluded-windows",
             "--log-level=3",
             "--enable-logging=stderr",
-            "--enable-features=SharedArrayBuffer",
+            "--enable-features=SharedArrayBuffer,NetworkService",
             "--metrics-recording-only",
             "--use-mock-keychain",
             "--force-color-profile=srgb",
