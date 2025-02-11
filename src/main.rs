@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate lazy_static;
+use bytes::Bytes;
+use cached::proc_macro::once;
 
 mod conf;
 mod modify;
@@ -128,7 +130,8 @@ fn fork(
 }
 
 /// get json endpoint for chrome instance proxying
-async fn version_handler(endpoint_path: Option<&str>) -> Result<impl Reply> {
+#[once(time = 15, sync_writes = true)]
+async fn version_handler_bytes(endpoint_path: Option<&str>) -> Bytes {
     use hyper::body::HttpBody;
 
     let req = Request::builder()
@@ -143,21 +146,19 @@ async fn version_handler(endpoint_path: Option<&str>) -> Result<impl Reply> {
             if !IS_HEALTHY.load(Ordering::Relaxed) {
                 IS_HEALTHY.store(true, Ordering::Relaxed);
             }
-
             if !HOST_NAME.is_empty() {
                 if let Ok(body_bytes) = resp.body_mut().collect().await {
                     let body = modify::modify_json_output(body_bytes.to_bytes());
 
-                    let modified_response = hyper::Response::builder()
-                        .status(resp.status())
-                        .body(Body::from(body))
-                        .unwrap_or_default();
-
-                    return Ok(modified_response);
+                    return body;
                 }
             }
 
-            resp
+            resp.body_mut()
+                .collect()
+                .await
+                .unwrap_or_default()
+                .to_bytes()
         }
         _ => {
             IS_HEALTHY.store(false, Ordering::Relaxed);
@@ -165,7 +166,18 @@ async fn version_handler(endpoint_path: Option<&str>) -> Result<impl Reply> {
         }
     };
 
-    Ok(resp)
+    resp
+}
+
+/// get json endpoint for chrome instance proxying
+async fn version_handler(endpoint_path: Option<&str>) -> Result<impl Reply> {
+    let body = version_handler_bytes(endpoint_path).await;
+
+    let modified_response = hyper::Response::builder()
+        .body(Body::from(body))
+        .unwrap_or_default();
+
+    Ok(modified_response)
 }
 
 /// get json endpoint for chrome instance proxying

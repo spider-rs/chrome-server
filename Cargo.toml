@@ -23,3 +23,4 @@ openssl-sys = { version = "0.9", features = ["vendored"] }
 dotenv = "0.15"
 bytes = "1"
 tracing = "0.1"
+cached = { version = "0", features = ["async", "async_tokio_rt_multi_thread"]}
