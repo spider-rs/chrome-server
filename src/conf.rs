@@ -139,7 +139,7 @@ lazy_static! {
             "--enable-root-ns-dns-proxy",
             "--ip-protection-proxy-opt-out",
             "--unsafely-disable-devtools-self-xss-warning",
-            "--enable-features=PdfOopif,SharedArrayBuffer,NetworkService,NetworkServiceInProcess",
+            "--enable-features=PdfOopif,SharedArrayBuffer",
             "--metrics-recording-only",
             "--use-mock-keychain",
             "--force-color-profile=srgb",
