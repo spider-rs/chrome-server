@@ -36,7 +36,7 @@ lazy_static! {
     };
 
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 73] = {
+    pub static ref CHROME_ARGS: [&'static str; 74] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -137,6 +137,7 @@ lazy_static! {
             // "--enable-features=SharedArrayBuffer,NetworkService,NetworkServiceInProcess",
             // "--disable-dns-proxy",
             "--enable-root-ns-dns-proxy",
+            "--unsafely-disable-devtools-self-xss-warning",
             "--enable-features=PdfOopif,SharedArrayBuffer,NetworkService,NetworkServiceInProcess",
             "--metrics-recording-only",
             "--use-mock-keychain",
@@ -156,7 +157,7 @@ lazy_static! {
             "--disable-blink-features=AutomationControlled",
             "--disable-ipc-flooding-protection",
             // "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
-            "--disable-features=IsolateSandboxedIframes,ProcessPerSiteUpToMainFrameThreshold,site-per-process,WebUIJSErrorReportingExtended,DIPS,InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
+            "--disable-features=PaintHolding,HttpsUpgrades,DeferRendererTasksAfterInput,LensOverlay,ThirdPartyStoragePartitioning,IsolateSandboxedIframes,ProcessPerSiteUpToMainFrameThreshold,site-per-process,WebUIJSErrorReportingExtended,DIPS,InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]
     };
     /// The light panda args to use.
