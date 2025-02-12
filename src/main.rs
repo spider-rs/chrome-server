@@ -130,8 +130,8 @@ fn fork(
 }
 
 /// get json endpoint for chrome instance proxying
-#[once(time = 30)]
-async fn version_handler_bytes(endpoint_path: Option<&str>) -> Bytes {
+#[once(time = 30, option = true)]
+async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
     use hyper::body::HttpBody;
 
     let req = Request::builder()
@@ -148,20 +148,21 @@ async fn version_handler_bytes(endpoint_path: Option<&str>) -> Bytes {
             if !HOST_NAME.is_empty() {
                 if let Ok(body_bytes) = resp.body_mut().collect().await {
                     let body = modify::modify_json_output(body_bytes.to_bytes());
-
-                    return body;
+                    return Some(body);
                 }
             }
 
-            resp.body_mut()
-                .collect()
-                .await
-                .unwrap_or_default()
-                .to_bytes()
+            Some(
+                resp.body_mut()
+                    .collect()
+                    .await
+                    .unwrap_or_default()
+                    .to_bytes(),
+            )
         }
         _ => {
             IS_HEALTHY.store(false, Ordering::Relaxed);
-            Default::default()
+            None
         }
     };
 
@@ -170,7 +171,9 @@ async fn version_handler_bytes(endpoint_path: Option<&str>) -> Bytes {
 
 /// get json endpoint for chrome instance proxying
 async fn version_handler(endpoint_path: Option<&str>) -> Result<impl Reply> {
-    let body = version_handler_bytes(endpoint_path).await;
+    let body = version_handler_bytes(endpoint_path)
+        .await
+        .unwrap_or_default();
 
     let modified_response = hyper::Response::builder()
         .body(Body::from(body))
