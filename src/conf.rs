@@ -36,7 +36,7 @@ lazy_static! {
     };
 
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 74] = {
+    pub static ref CHROME_ARGS: [&'static str; 75] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -108,6 +108,7 @@ lazy_static! {
             "--disable-search-engine-choice-screen",
             "--disable-partial-raster",
             "--disable-in-process-stack-traces",
+            "--use-angle=swiftshader",
             // "--disable-v8-idle-tasks",
             "--disable-low-res-tiling",
             "--disable-speech-api",
