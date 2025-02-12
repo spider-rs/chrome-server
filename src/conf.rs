@@ -36,7 +36,7 @@ lazy_static! {
     };
 
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 69] = {
+    pub static ref CHROME_ARGS: [&'static str; 70] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -131,7 +131,9 @@ lazy_static! {
             "--log-level=3",
             "--enable-logging=stderr",
             // "--enable-features=SharedArrayBuffer,NetworkService,NetworkServiceInProcess",
-            "--enable-features=SharedArrayBuffer,NetworkService",
+            "--disable-dns-proxy",
+            // "--enable-root-ns-dns-proxy",
+            "--enable-features=SharedArrayBuffer",
             "--metrics-recording-only",
             "--use-mock-keychain",
             "--force-color-profile=srgb",
