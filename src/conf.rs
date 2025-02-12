@@ -130,7 +130,8 @@ lazy_static! {
             "--disable-backgrounding-occluded-windows",
             "--log-level=3",
             "--enable-logging=stderr",
-            "--enable-features=SharedArrayBuffer,NetworkService,NetworkServiceInProcess",
+            // "--enable-features=SharedArrayBuffer,NetworkService,NetworkServiceInProcess",
+            "--enable-features=SharedArrayBuffer,NetworkService",
             "--metrics-recording-only",
             "--use-mock-keychain",
             "--force-color-profile=srgb",
@@ -148,7 +149,7 @@ lazy_static! {
             "--disable-blink-features=AutomationControlled",
             "--disable-ipc-flooding-protection",
             // "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
-            "--disable-features=InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
+            "--disable-features=WebUIJSErrorReportingExtended,DIPS,InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]
     };
     /// The light panda args to use.

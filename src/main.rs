@@ -242,7 +242,7 @@ async fn run_main() {
 
     // use an env variable extend.
     let lightpanda_build =
-        chrome_path.ends_with("lightpanda-aarch64-macos") || chrome_path.ends_with("x86_64-linux");
+        chrome_path.ends_with("lightpanda-aarch64-macos") || chrome_path.ends_with("lightpanda-x86_64-linux");
 
     let chrome_address = std::env::args().nth(2).unwrap_or("127.0.0.1".to_string());
     let auto_start = std::env::args().nth(3).unwrap_or_else(|| {
