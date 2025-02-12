@@ -46,7 +46,9 @@ lazy_static! {
                 Ok(h) => {
                     if h == "false" {
                         ""
-                    } else {
+                    } else if h == "new" {
+                        "--headless=new"
+                    }else {
                         "--headless"
                     }
                 }
