@@ -130,7 +130,7 @@ fn fork(
 }
 
 /// get json endpoint for chrome instance proxying
-#[once(time = 30, option = true, sync_writes = true)]
+#[once(time = 60, option = true, sync_writes = true)]
 async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
     use hyper::body::HttpBody;
 
