@@ -36,7 +36,7 @@ lazy_static! {
     };
 
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 74] = {
+    pub static ref CHROME_ARGS: [&'static str; 75] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -150,6 +150,7 @@ lazy_static! {
             "--password-store=basic",
             "--export-tagged-pdf",
             "--no-pings",
+            "--scheduler-configuration",
             // "--site-per-process",
             use_gl,
             "--window-size=1400,820",
