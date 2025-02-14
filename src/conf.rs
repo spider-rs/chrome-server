@@ -36,7 +36,7 @@ lazy_static! {
     };
 
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 77] = {
+    pub static ref CHROME_ARGS: [&'static str; 78] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -151,6 +151,7 @@ lazy_static! {
             "--no-pings",
             "--scheduler-configuration",
             "--rusty-png",
+            "--disable-histogram-customizer",
             // "--site-per-process",
             use_gl,
             "--window-size=1400,820",
