@@ -1,6 +1,6 @@
 [package]
 name = "chrome_server"
-version = "0.2.9"
+version = "0.2.10"
 edition = "2021"
 authors = [
     "j-mendez <jeff@spider.cloud>"
