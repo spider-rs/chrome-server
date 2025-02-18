@@ -8,48 +8,17 @@ mod modify;
 mod proxy;
 
 use conf::{
-    CHROME_ARGS, CHROME_INSTANCES, CLIENT, DEFAULT_PORT, DEFAULT_PORT_SERVER, IS_HEALTHY,
-    LIGHTPANDA_ARGS, TARGET_REPLACEMENT,
+    CHROME_ARGS, CHROME_INSTANCES, CLIENT, DEFAULT_PORT, DEFAULT_PORT_SERVER, ENDPOINT, HOST_NAME,
+    IS_HEALTHY, LIGHTPANDA_ARGS, TARGET_REPLACEMENT,
 };
 use core::sync::atomic::Ordering;
-use hyper::{Body, Method, Request};
+use hyper::header::CONTENT_TYPE;
+use hyper::{Body, Method, Request, Uri};
 use std::process::Command;
 use tokio::{signal, sync::oneshot};
 use warp::{Filter, Rejection, Reply};
 
 type Result<T> = std::result::Result<T, Rejection>;
-
-lazy_static::lazy_static! {
-    /// The hostname of the machine to replace 127.0.0.1 when making request to /json/version on port 6000.
-    pub static ref HOST_NAME: String = {
-        let mut hostname = String::new();
-
-        if let Ok(name) = std::env::var("HOSTNAME_OVERRIDE") {
-            hostname = name;
-        }
-
-        if hostname.is_empty() {
-            if let Ok(name) = std::env::var("HOSTNAME") {
-                hostname = name;
-            }
-        }
-
-        hostname
-    };
-    static ref ENDPOINT: String = {
-        let default_port = std::env::args()
-            .nth(4)
-            .unwrap_or("9223".into())
-            .parse::<u32>()
-            .unwrap_or_default();
-        let default_port = if default_port == 0 {
-            9223
-        } else {
-            default_port
-        };
-        format!("http://127.0.0.1:{}/json/version", default_port)
-    };
-}
 
 /// shutdown the chrome instance by process id
 #[cfg(target_os = "windows")]
@@ -135,12 +104,17 @@ fn fork(
 async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
     use hyper::body::HttpBody;
 
+    let endpoint = endpoint_path
+        .unwrap_or(ENDPOINT.as_str())
+        .parse::<Uri>()
+        .expect("Failed to parse URI");
+
     let req = Request::builder()
         .method(Method::GET)
-        .uri(endpoint_path.unwrap_or(ENDPOINT.as_str()))
-        .header("content-type", "application/json")
-        .body(Body::default())
-        .unwrap_or_default();
+        .uri(endpoint)
+        .header(CONTENT_TYPE, "application/json")
+        .body(Body::empty())
+        .expect("Failed to build the request");
 
     let resp = match CLIENT.request(req).await {
         Ok(mut resp) => {
@@ -185,12 +159,16 @@ async fn version_handler(endpoint_path: Option<&str>) -> Result<impl Reply> {
 
 /// get json endpoint for chrome instance proxying
 async fn version_handler_with_path(port: u32) -> Result<impl Reply> {
+    let endpoint = format!("http://127.0.0.1:{}/json/version", port)
+        .parse::<Uri>()
+        .expect("Failed to parse URI");
+
     let req = Request::builder()
         .method(Method::GET)
-        .uri(format!("http://127.0.0.1:{}/json/version", port))
-        .header("content-type", "application/json")
-        .body(Body::default())
-        .unwrap_or_default();
+        .uri(endpoint)
+        .header(CONTENT_TYPE, "application/json")
+        .body(Body::empty())
+        .expect("Failed to build the request");
 
     let resp = match CLIENT.request(req).await {
         Ok(resp) => resp,

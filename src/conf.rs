@@ -34,7 +34,6 @@ lazy_static! {
 
         default_port
     };
-
     /// The chrome args to use.
     pub static ref CHROME_ARGS: [&'static str; 78] = {
         let headless = std::env::args()
@@ -177,7 +176,6 @@ lazy_static! {
             port,
         ]
     };
-
     pub static ref CLIENT: Client<hyper::client::HttpConnector> = {
         Client::new()
     };
@@ -195,5 +193,34 @@ lazy_static! {
 
             (target_port, proxy_port)
         }
+    };
+    /// The hostname of the machine to replace 127.0.0.1 when making request to /json/version on port 6000.
+    pub(crate) static ref HOST_NAME: String = {
+        let mut hostname = String::new();
+
+        if let Ok(name) = std::env::var("HOSTNAME_OVERRIDE") {
+            hostname = name;
+        }
+
+        if hostname.is_empty() {
+            if let Ok(name) = std::env::var("HOSTNAME") {
+                hostname = name;
+            }
+        }
+
+        hostname
+    };
+    pub(crate) static ref ENDPOINT: String = {
+        let default_port = std::env::args()
+            .nth(4)
+            .unwrap_or("9223".into())
+            .parse::<u32>()
+            .unwrap_or_default();
+        let default_port = if default_port == 0 {
+            9223
+        } else {
+            default_port
+        };
+        format!("http://127.0.0.1:{}/json/version", default_port)
     };
 }
