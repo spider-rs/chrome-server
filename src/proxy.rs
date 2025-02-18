@@ -30,6 +30,8 @@ lazy_static::lazy_static! {
 }
 
 pub(crate) mod proxy {
+    use std::time::Duration;
+
     use tokio::net::{TcpListener, TcpStream};
 
     /// Run the direct proxy connection.
@@ -54,8 +56,10 @@ pub(crate) mod proxy {
     pub async fn run_proxy_io() -> std::io::Result<()> {
         let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
         let std_stream = std::net::TcpStream::connect(*crate::proxy::TARGET)?;
+
         std_stream.set_nonblocking(true)?;
         std_stream.set_nodelay(true)?;
+
         println!("Proxy(REUSE) Listening on {}", *crate::proxy::ENTRY);
 
         loop {
@@ -101,6 +105,7 @@ pub(crate) mod proxy {
 
     pub async fn run_proxy() -> std::io::Result<()> {
         if *crate::proxy::REUSE_SOCKET {
+            tokio::time::sleep(Duration::from_millis(500)).await;
             if let Err(_) = run_proxy_io().await {
                 run_proxy_direct().await?;
             }
