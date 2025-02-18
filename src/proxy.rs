@@ -25,7 +25,7 @@ lazy_static::lazy_static! {
     };
     /// Re-use the connection socket.
     static ref REUSE_SOCKET: bool  = {
-        std::env::var("REUSE_SOCKET").unwrap_or_default() == "true" && cfg!(target_os = "linux")
+        std::env::var("REUSE_SOCKET").unwrap_or_default() == "true"
     };
 }
 
