@@ -225,7 +225,7 @@ lazy_static! {
 
         if hostname.is_empty() {
             if let Ok(name) = std::env::var("HOSTNAME") {
-                if name.is_empty() {
+                if !name.is_empty() {
                     hostname = name;
                 }
             }
