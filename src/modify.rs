@@ -1,4 +1,4 @@
-use bytes::{Bytes, BytesMut};
+use bytes::Bytes;
 
 /// modify the json output for the bytes hosting.
 pub(crate) fn modify_json_output(body_bytes: Bytes) -> Bytes {
@@ -10,7 +10,8 @@ pub(crate) fn modify_json_output(body_bytes: Bytes) -> Bytes {
 
     // Estimate a suitable capacity
     let mut modified_buffer =
-        BytesMut::with_capacity(buffer.len() + (replacement_host.len() - target_host.len()));
+        Vec::with_capacity(buffer.len() + (replacement_host.len() - target_host.len()));
+
     let mut start = 0;
 
     // Replace occurrences of the target host
@@ -25,9 +26,8 @@ pub(crate) fn modify_json_output(body_bytes: Bytes) -> Bytes {
     modified_buffer.extend_from_slice(&buffer[start..]);
 
     // Now handle the port replacement
-    let mut final_buffer = BytesMut::with_capacity(
-        modified_buffer.len() + (replacement_port.len() - target_port.len()),
-    );
+    let mut final_buffer =
+        Vec::with_capacity(modified_buffer.len() + (replacement_port.len() - target_port.len()));
     start = 0;
 
     while let Some(pos) = modified_buffer[start..]
@@ -40,5 +40,5 @@ pub(crate) fn modify_json_output(body_bytes: Bytes) -> Bytes {
     }
     final_buffer.extend_from_slice(&modified_buffer[start..]);
 
-    final_buffer.freeze()
+    final_buffer.into()
 }

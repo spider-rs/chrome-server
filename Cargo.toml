@@ -12,11 +12,11 @@ documentation = "https://docs.rs/chrome_server"
 categories = ["web-programming", "command-line-utilities"]
 
 [dependencies]
-hyper = "0.14"
+hyper = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["full"] }
+http-body-util = "0.1"
+hyper-util = { version = "0.1", features = ["full"] }
 lazy_static = "1"
-string_concat = "0.0.1"
-tokio = { version = "1", features = ["rt-multi-thread", "signal", "macros", "net"] }
-warp = "0.3"
 openssl = { version = "0.10", features = ["vendored"] }
 openssl-sys = { version = "0.9", features = ["vendored"] }
 bytes = "1"

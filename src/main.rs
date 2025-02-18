@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate lazy_static;
-use bytes::Bytes;
 use cached::proc_macro::once;
 
 mod conf;
@@ -8,19 +7,24 @@ mod modify;
 mod proxy;
 
 use conf::{
-    CHROME_ARGS, CHROME_INSTANCES, CLIENT, DEFAULT_PORT, DEFAULT_PORT_SERVER, ENDPOINT, HOST_NAME,
-    IS_HEALTHY, LIGHTPANDA_ARGS, TARGET_REPLACEMENT,
+    CHROME_ADDRESS, CHROME_ARGS, CHROME_INSTANCES, CHROME_PATH, DEFAULT_PORT, DEFAULT_PORT_SERVER,
+    ENDPOINT, HOST_NAME, IS_HEALTHY, LIGHTPANDA_ARGS, LIGHT_PANDA, TARGET_REPLACEMENT,
 };
 use core::sync::atomic::Ordering;
-use hyper::header::CONTENT_TYPE;
-use hyper::{Body, Method, Request, Uri};
+use http_body_util::Full;
+use hyper::body::{Bytes, Incoming};
+use hyper::server::conn::http1;
+use hyper::service::service_fn;
+use hyper::{Method, Request, Response, StatusCode};
+use hyper_util::rt::TokioIo;
+use std::convert::Infallible;
+use std::net::SocketAddr;
 use std::process::Command;
-use tokio::{signal, sync::oneshot};
-use warp::{Filter, Rejection, Reply};
+use tokio::net::TcpListener;
+use tokio::net::TcpStream;
+use tokio::signal;
 
-type Result<T> = std::result::Result<T, Rejection>;
-
-/// shutdown the chrome instance by process id
+/// Shutdown the chrome instance by process id
 #[cfg(target_os = "windows")]
 fn shutdown(pid: &u32) {
     let _ = Command::new("taskkill")
@@ -28,25 +32,20 @@ fn shutdown(pid: &u32) {
         .spawn();
 }
 
-/// shutdown the chrome instance by process id
+/// Shutdown the chrome instance by process id
 #[cfg(not(target_os = "windows"))]
 fn shutdown(pid: &u32) {
     let _ = Command::new("kill").args(["-9", &pid.to_string()]).spawn();
 }
 
-/// fork a chrome process
-fn fork(
-    chrome_path: &String,
-    chrome_address: &String,
-    port: Option<u32>,
-    lightpanda_build: bool,
-) -> String {
-    let id = if !lightpanda_build {
-        let mut command = Command::new(chrome_path);
+/// Fork a chrome process
+async fn fork(port: Option<u32>) -> String {
+    let id = if !*LIGHT_PANDA {
+        let mut command = Command::new(&*CHROME_PATH);
         let mut chrome_args = CHROME_ARGS.map(|e| e.to_string());
 
-        if !chrome_address.is_empty() {
-            chrome_args[0] = format!("--remote-debugging-address={}", &chrome_address.to_string());
+        if !CHROME_ADDRESS.is_empty() {
+            chrome_args[0] = format!("--remote-debugging-address={}", &CHROME_ADDRESS.to_string());
         }
 
         if let Some(port) = port {
@@ -69,7 +68,7 @@ fn fork(
         id
     } else {
         let panda_args = LIGHTPANDA_ARGS.map(|e| e.to_string());
-        let mut command = Command::new(chrome_path);
+        let mut command = Command::new(&*CHROME_PATH);
 
         let host = panda_args[0].replace("--host=", "");
         let port = panda_args[1].replace("--port=", "");
@@ -92,48 +91,66 @@ fn fork(
         id
     };
 
-    if let Ok(mut mutx) = CHROME_INSTANCES.lock() {
-        mutx.insert(id.into());
-    }
+    CHROME_INSTANCES.lock().await.insert(id.into());
 
     id.to_string()
 }
 
-/// get json endpoint for chrome instance proxying
+/// Get json endpoint for chrome instance proxying
 #[once(option = true, sync_writes = true)]
 async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
-    use hyper::body::HttpBody;
+    use http_body_util::BodyExt;
 
-    let endpoint = endpoint_path
-        .unwrap_or(ENDPOINT.as_str())
-        .parse::<Uri>()
-        .expect("Failed to parse URI");
+    let url = endpoint_path
+        .unwrap_or(&ENDPOINT.as_str())
+        .parse::<hyper::Uri>()
+        .unwrap();
 
     let req = Request::builder()
         .method(Method::GET)
-        .uri(endpoint)
-        .header(CONTENT_TYPE, "application/json")
-        .body(Body::empty())
+        .uri("/json/version")
+        .header(hyper::header::CONTENT_TYPE, "application/json")
+        .body(http_body_util::Empty::<Bytes>::new())
         .expect("Failed to build the request");
 
-    let resp = match CLIENT.request(req).await {
+    let host = url.host().expect("uri has no host");
+    let port = url.port_u16().unwrap_or(80);
+
+    let address = format!("{}:{}", host, port);
+
+    let stream = TcpStream::connect(address).await.expect("valid address");
+
+    let io = TokioIo::new(stream);
+
+    let (mut client, conn) = hyper::client::conn::http1::handshake(io).await.unwrap();
+
+    tokio::task::spawn(async move {
+        if let Err(err) = conn.await {
+            println!("Connection failed: {:?}", err);
+        }
+    });
+
+    let resp = match client.send_request(req).await {
         Ok(mut resp) => {
             IS_HEALTHY.store(true, Ordering::Relaxed);
 
-            if !HOST_NAME.is_empty() {
-                if let Ok(body_bytes) = resp.body_mut().collect().await {
-                    let body = modify::modify_json_output(body_bytes.to_bytes());
-                    return Some(body);
+            let mut bytes_mut = vec![];
+
+            while let Some(next) = resp.frame().await {
+                if let Ok(frame) = next {
+                    if let Some(chunk) = frame.data_ref() {
+                        bytes_mut.extend_from_slice(&chunk);
+                    }
                 }
             }
 
-            Some(
-                resp.body_mut()
-                    .collect()
-                    .await
-                    .unwrap_or_default()
-                    .to_bytes(),
-            )
+            if !HOST_NAME.is_empty() {
+                let body = modify::modify_json_output(bytes_mut.into());
+
+                Some(body)
+            } else {
+                Some(bytes_mut.into())
+            }
         }
         _ => {
             IS_HEALTHY.store(false, Ordering::Relaxed);
@@ -144,86 +161,90 @@ async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
     resp
 }
 
-/// get json endpoint for chrome instance proxying
-async fn version_handler(endpoint_path: Option<&str>) -> Result<impl Reply> {
-    let body = version_handler_bytes(endpoint_path)
-        .await
-        .unwrap_or_default();
-
-    let modified_response = hyper::Response::builder()
-        .body(Body::from(body))
-        .unwrap_or_default();
-
-    Ok(modified_response)
-}
-
-/// get json endpoint for chrome instance proxying
-async fn version_handler_with_path(port: u32) -> Result<impl Reply> {
-    let endpoint = format!("http://127.0.0.1:{}/json/version", port)
-        .parse::<Uri>()
-        .expect("Failed to parse URI");
-
-    let req = Request::builder()
-        .method(Method::GET)
-        .uri(endpoint)
-        .header(CONTENT_TYPE, "application/json")
-        .body(Body::empty())
-        .expect("Failed to build the request");
-
-    let resp = match CLIENT.request(req).await {
-        Ok(resp) => resp,
-        _ => Default::default(),
-    };
-
-    Ok(resp)
-}
-
-/// health check server
-async fn hc() -> Result<impl Reply> {
-    use hyper::Response;
-    use hyper::StatusCode;
-
-    #[derive(Debug)]
-    struct HealthCheckError;
-    impl warp::reject::Reject for HealthCheckError {}
-
+/// Health check handler
+async fn health_check_handler() -> Result<Response<Full<Bytes>>, Infallible> {
     if IS_HEALTHY.load(Ordering::Relaxed) {
-        Response::builder()
-            .status(StatusCode::OK)
-            .body("healthy!")
-            .map_err(|_e| warp::reject::custom(HealthCheckError))
+        Ok(Response::new(Full::new(Bytes::from("healthy"))))
     } else {
-        Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .body("unhealthy!")
-            .map_err(|_e| warp::reject::custom(HealthCheckError))
+        let mut response = Response::new(Full::new(Bytes::from("unhealthy")));
+        *response.status_mut() = StatusCode::SERVICE_UNAVAILABLE;
+
+        Ok(response)
     }
 }
 
-/// Get the default chrome bin location per OS.
-fn get_default_chrome_bin() -> &'static str {
-    if cfg!(target_os = "windows") {
-        "chrome.exe"
-    } else if cfg!(target_os = "macos") {
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-    } else if cfg!(target_os = "linux") {
-        "chromium"
-    } else {
-        "chrome"
+/// Fork handler
+async fn fork_handler(port: Option<u32>) -> Result<Response<Full<Bytes>>, Infallible> {
+    let pid = fork(port).await;
+    let pid = format!("Forked process with pid: {}", pid);
+
+    Ok(Response::new(Full::new(Bytes::from(pid))))
+}
+
+/// Shutdown handler
+async fn shutdown_handler() -> Result<Response<Full<Bytes>>, Infallible> {
+    let mut mutx = CHROME_INSTANCES.lock().await;
+    for pid in mutx.iter() {
+        shutdown(pid);
+    }
+    mutx.clear();
+
+    Ok(Response::new(Full::new(Bytes::from(
+        "Shutdown successful.",
+    ))))
+}
+
+/// Request handler
+async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>, Infallible> {
+    match (req.method(), req.uri().path()) {
+        (&Method::GET, "/health") => health_check_handler().await,
+        (&Method::GET, "/") => health_check_handler().await,
+        (&Method::POST, "/fork") => fork_handler(None).await,
+        (&Method::POST, path) if path.starts_with("/fork/") => {
+            if let Some(port) = path.split('/').nth(2) {
+                if let Ok(port) = port.parse::<u32>() {
+                    fork_handler(Some(port)).await
+                } else {
+                    let message = Response::new(Full::new(Bytes::from("Invalid port argument")));
+
+                    Ok(message)
+                }
+            } else {
+                let message = Response::new(Full::new(Bytes::from("Invalid path")));
+
+                Ok(message)
+            }
+        }
+        (&Method::GET, "/json/version") => {
+            let body = version_handler_bytes(None).await.unwrap_or_default();
+            let empty = body.is_empty();
+
+            let mut resp = Response::new(Full::new(body));
+
+            resp.headers_mut().insert(
+                hyper::header::CONTENT_TYPE,
+                hyper::header::HeaderValue::from_static("application/json"),
+            );
+
+            if empty {
+                *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
+            }
+
+            Ok(resp)
+        }
+        (&Method::POST, "/shutdown") => shutdown_handler().await,
+        _ => {
+            let mut resp = Response::new(Full::new(Bytes::from("Not Found")));
+
+            *resp.status_mut() = StatusCode::NOT_FOUND;
+
+            Ok(resp)
+        }
     }
 }
 
 /// Main entry for the proxy.
-async fn run_main() {
-    let chrome_path = std::env::args().nth(1).unwrap_or_else(|| {
-        std::env::var("CHROME_PATH").unwrap_or_else(|_| get_default_chrome_bin().to_string())
-    });
-
-    // use an env variable extend.
-    let lightpanda_build = chrome_path.ends_with("lightpanda-aarch64-macos")
-        || chrome_path.ends_with("lightpanda-x86_64-linux");
-
-    let chrome_address = std::env::args().nth(2).unwrap_or("127.0.0.1".to_string());
+async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let auto_start = std::env::args().nth(3).unwrap_or_else(|| {
         let auto = std::env::var("CHROME_INIT").unwrap_or("true".into());
         if auto == "true" {
@@ -232,129 +253,53 @@ async fn run_main() {
             "ignore".into()
         }
     });
-    let chrome_path_1 = chrome_path.clone();
-    let chrome_address_1 = chrome_address.clone();
-    let chrome_address_2 = chrome_address.clone();
 
-    // init chrome process
     if auto_start == "init" {
-        fork(
-            &chrome_path,
-            &chrome_address_1,
-            Some(*DEFAULT_PORT),
-            lightpanda_build,
-        );
+        fork(Some(*DEFAULT_PORT)).await;
     }
 
-    let health_check = warp::path::end()
-        .and_then(hc)
-        .with(warp::cors().allow_any_origin());
+    let addr = SocketAddr::new(
+        std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0)),
+        *DEFAULT_PORT_SERVER,
+    );
 
-    let chrome_init = move || fork(&chrome_path, &chrome_address_1, None, lightpanda_build);
-    let chrome_init_args = move |port: u32| {
-        fork(
-            &chrome_path_1,
-            &chrome_address_2,
-            Some(port),
-            lightpanda_build,
-        )
-    };
-    let json_args = move || version_handler(None);
-    let json_args_with_port = move |port| version_handler_with_path(port);
+    let listener = TcpListener::bind(addr).await.expect("connection");
 
-    let fork = warp::path!("fork").map(chrome_init);
-    let fork_with_port = warp::path!("fork" / u32).map(chrome_init_args);
+    let make_svc = async move {
+        loop {
+            if let Ok((tcp, _)) = listener.accept().await {
+                let io = TokioIo::new(tcp);
 
-    let version = warp::path!("json" / "version").and_then(json_args);
-    let version_with_port = warp::path!("json" / "version" / u32).and_then(json_args_with_port);
-
-    let shutdown_fn = warp::path!("shutdown" / u32).map(|cid: u32| {
-        let shutdown_id = match CHROME_INSTANCES.lock() {
-            Ok(mutx) => {
-                let pid = mutx.get(&cid);
-
-                match pid {
-                    Some(pid) => {
-                        shutdown(pid);
-                        pid.to_string()
+                tokio::task::spawn(async move {
+                    if let Err(err) = http1::Builder::new()
+                        .serve_connection(io, service_fn(request_handler))
+                        .await
+                    {
+                        eprintln!("Error serving connection: {:?}", err);
                     }
-                    _ => "0".into(),
-                }
-            }
-            _ => "0".into(),
-        };
-
-        shutdown_id
-    });
-
-    let shutdown_base_fn = || {
-        if let Ok(mutx) = CHROME_INSTANCES.lock() {
-            for pid in mutx.iter() {
-                shutdown(pid);
+                });
             }
         }
-
-        "0"
     };
 
-    let shutdown_base_fn = warp::path!("shutdown").map(shutdown_base_fn);
-
-    let ctrls = warp::post().and(fork.with(warp::cors().allow_any_origin()));
-    let ctrls_fork = warp::post().and(fork_with_port.with(warp::cors().allow_any_origin()));
-    let shutdown = warp::post().and(shutdown_fn.with(warp::cors().allow_any_origin()));
-    let shutdown_base = warp::post().and(shutdown_base_fn.with(warp::cors().allow_any_origin()));
-    let version_port = warp::post().and(version_with_port.with(warp::cors().allow_any_origin()));
-
-    let routes = warp::get()
-        .and(health_check)
-        .or(shutdown)
-        .or(shutdown_base)
-        .or(version)
-        .or(ctrls_fork)
-        .or(version_port)
-        .or(ctrls);
-
     println!(
-        "Chrome server at {}:{}",
-        if chrome_address.is_empty() {
+        "Chrome server running on {}:{}",
+        if CHROME_ADDRESS.is_empty() {
             "localhost"
         } else {
-            &chrome_address
+            &CHROME_ADDRESS
         },
         DEFAULT_PORT_SERVER.to_string()
     );
 
-    let (tx_shutdown, rx_shutdown) = oneshot::channel::<()>();
-
-    let signal_handle = tokio::spawn(async move {
-        signal::unix::signal(signal::unix::SignalKind::terminate())
-            .expect("Failed to setup signal handler")
-            .recv()
-            .await;
-
-        tracing::info!("Received termination signal");
-
-        if tx_shutdown.send(()).is_err() {
-            tracing::error!("Failed to send shutdown signal through channel");
-        }
-    });
-
-    let srv = async {
-        tokio::select! {
-            _ = warp::serve(routes)
-            .run(([0, 0, 0, 0], DEFAULT_PORT_SERVER.to_owned())) => tracing::error!("Server finished without external shutdown."),
-            _ = proxy::proxy::run_proxy() => tracing::error!("Received shutdown signal."),
-            _ = rx_shutdown =>  tracing::error!("Received shutdown signal."),
-        }
-    };
-
     tokio::select! {
-        _ = srv => (),
-        _ = signal_handle => (),
+        _ = make_svc => Ok(()),
+        _ = crate::proxy::proxy::run_proxy() =>  Ok(()),
+        _ = signal::ctrl_c() => Ok(()),
     }
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     run_main().await
 }

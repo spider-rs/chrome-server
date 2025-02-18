@@ -1,11 +1,27 @@
-use hyper::Client;
+// use std::time::Duration;
+// use hyper_util::client::legacy::Client;
+// use hyper_util::rt::TokioExecutor;
+
 use std::collections::HashSet;
-use std::sync::{atomic::AtomicBool, Mutex};
+use std::sync::atomic::AtomicBool;
+
+/// Get the default chrome bin location per OS.
+fn get_default_chrome_bin() -> &'static str {
+    if cfg!(target_os = "windows") {
+        "chrome.exe"
+    } else if cfg!(target_os = "macos") {
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    } else if cfg!(target_os = "linux") {
+        "chromium"
+    } else {
+        "chrome"
+    }
+}
 
 lazy_static! {
     /// Is the instance healthy?
     pub static ref IS_HEALTHY: AtomicBool = AtomicBool::new(true);
-    pub static ref CHROME_INSTANCES: Mutex<HashSet<u32>> = Mutex::new(HashSet::new());
+    pub static ref CHROME_INSTANCES: tokio::sync::Mutex<HashSet<u32>> = tokio::sync::Mutex::new(HashSet::new());
     pub static ref DEFAULT_PORT: u32 = {
         let default_port = std::env::args()
             .nth(4)
@@ -176,9 +192,12 @@ lazy_static! {
             port,
         ]
     };
-    pub static ref CLIENT: Client<hyper::client::HttpConnector> = {
-        Client::new()
-    };
+    // pub static ref CLIENT: Client<hyper_util::client::legacy::connect::HttpConnector, hyper_util::client::legacy::Error> = {
+    //     Client::builder(TokioExecutor::new())
+    //     .pool_idle_timeout(Duration::from_secs(30))
+    //     .http2_only(true)
+    //     .build_http()
+    // };
     /// Return base target and replacement. Target port is the port for chrome.
     pub(crate) static ref TARGET_REPLACEMENT: (&'static [u8; 5], &'static[u8; 5]) = {
         if *DEFAULT_PORT == 9223 {
@@ -210,17 +229,20 @@ lazy_static! {
 
         hostname
     };
+    pub(crate) static ref ENDPOINT_BASE: String = {
+        format!("http://127.0.0.1:{}", *DEFAULT_PORT)
+    };
     pub(crate) static ref ENDPOINT: String = {
-        let default_port = std::env::args()
-            .nth(4)
-            .unwrap_or("9223".into())
-            .parse::<u32>()
-            .unwrap_or_default();
-        let default_port = if default_port == 0 {
-            9223
-        } else {
-            default_port
-        };
-        format!("http://127.0.0.1:{}/json/version", default_port)
+        format!("http://127.0.0.1:{}/json/version", *DEFAULT_PORT)
+    };
+    pub(crate) static ref CHROME_PATH: String = {
+        std::env::var("CHROME_PATH").unwrap_or_else(|_| get_default_chrome_bin().to_string()).to_string()
+    };
+    pub(crate) static ref CHROME_ADDRESS: String = {
+        std::env::args().nth(2).unwrap_or("127.0.0.1".to_string()).to_string()
+    };
+    pub(crate) static ref LIGHT_PANDA: bool = {
+        CHROME_PATH.ends_with("lightpanda-aarch64-macos")
+        || CHROME_PATH.ends_with("lightpanda-x86_64-linux")
     };
 }
