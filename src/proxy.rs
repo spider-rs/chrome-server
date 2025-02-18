@@ -59,7 +59,7 @@ pub(crate) mod proxy {
         println!("Proxy(REUSE) Listening on {}", *crate::proxy::ENTRY);
 
         loop {
-            let (client_stream, client_addr) = listener.accept().await?;
+            let (mut client_stream, client_addr) = listener.accept().await?;
             tracing::info!("Accepted connection from {}", client_addr);
             match std_stream.try_clone() {
                 Ok(std_stream) => {
