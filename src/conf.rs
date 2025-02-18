@@ -240,7 +240,9 @@ lazy_static! {
         format!("http://127.0.0.1:{}/json/version", *DEFAULT_PORT)
     };
     pub(crate) static ref CHROME_PATH: String = {
-        std::env::var("CHROME_PATH").unwrap_or_else(|_| get_default_chrome_bin().to_string()).to_string()
+        std::env::args().nth(1).unwrap_or_else(|| {
+            std::env::var("CHROME_PATH").unwrap_or_else(|_| get_default_chrome_bin().to_string())
+        })
     };
     pub(crate) static ref CHROME_ADDRESS: String = {
         std::env::args().nth(2).unwrap_or("127.0.0.1".to_string()).to_string()
