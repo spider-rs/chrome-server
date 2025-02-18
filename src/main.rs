@@ -35,22 +35,22 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
     let mut attempts = 0;
     loop {
         match timeout(Duration::from_secs(1), TcpStream::connect(address)).await {
-            Ok(Ok(stream)) => return Some(stream), // Successfully connected
+            Ok(Ok(stream)) => return Some(stream),
             Ok(Err(e)) => {
                 attempts += 1;
-                eprintln!("Failed to connect: {}. Attempt {} of 2", e, attempts);
+                tracing::error!("Failed to connect: {}. Attempt {} of 3", e, attempts);
             }
             Err(_) => {
                 attempts += 1;
-                eprintln!("Connection attempt timed out. Attempt {} of 2", attempts);
+                tracing::error!("Connection attempt timed out. Attempt {} of 3", attempts);
             }
         }
 
-        if attempts >= 2 {
+        if attempts >= 3 {
             return None;
         }
 
-        sleep(Duration::from_secs(1)).await;
+        sleep(Duration::from_millis(1500)).await;
     }
 }
 
@@ -160,7 +160,7 @@ async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
 
         tokio::task::spawn(async move {
             if let Err(err) = conn.await {
-                println!("Connection failed: {:?}", err);
+                tracing::error!("Connection failed: {:?}", err);
             }
         });
 
