@@ -23,19 +23,12 @@ lazy_static::lazy_static! {
             .unwrap_or(131072); // Default to 128kb
         buffer_size
     };
-    /// Re-use the connection socket.
-    static ref REUSE_SOCKET: bool  = {
-        std::env::var("REUSE_SOCKET").unwrap_or_default() == "true"
-    };
 }
 
 pub(crate) mod proxy {
-    use std::time::Duration;
-
     use tokio::net::{TcpListener, TcpStream};
 
-    /// Run the direct proxy connection.
-    pub async fn run_proxy_direct() -> std::io::Result<()> {
+    pub async fn run_proxy() -> std::io::Result<()> {
         let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
         println!("Proxy Listening on {}", *crate::proxy::ENTRY);
 
@@ -49,72 +42,6 @@ pub(crate) mod proxy {
                 }
             });
         }
-    }
-
-    #[cfg(target_os = "linux")]
-    /// Keep a direct connection to the server.
-    pub async fn run_proxy_io() -> std::io::Result<()> {
-        let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
-        let std_stream = std::net::TcpStream::connect(*crate::proxy::TARGET)?;
-
-        let _ = std_stream.set_nonblocking(true);
-        let _ = std_stream.set_nodelay(true);
-
-        println!("Proxy(REUSE) Listening on {}", *crate::proxy::ENTRY);
-
-        loop {
-            let (mut client_stream, client_addr) = listener.accept().await?;
-            tracing::info!("Accepted connection from {}", client_addr);
-            match std_stream.try_clone() {
-                Ok(std_stream) => {
-                    tokio::spawn(async move {
-                        match TcpStream::from_std(std_stream) {
-                            Ok(mut server_stream) => {
-                                let _ = tokio::io::copy_bidirectional_with_sizes(
-                                    &mut client_stream,
-                                    &mut server_stream,
-                                    *crate::proxy::BUFFER_SIZE,
-                                    *crate::proxy::BUFFER_SIZE,
-                                )
-                                .await;
-                            }
-                            _ => {
-                                if let Err(err) = handle_connection(&mut client_stream).await {
-                                    tracing::error!("Error handling connection: {}", err);
-                                }
-                            }
-                        }
-                    });
-                }
-                _ => {
-                    tokio::spawn(async move {
-                        if let Err(err) = handle_connection(&mut client_stream).await {
-                            tracing::error!("Error handling connection: {}", err);
-                        }
-                    });
-                }
-            }
-        }
-    }
-
-    #[cfg(not(target_os = "linux"))]
-    pub async fn run_proxy_io() -> std::io::Result<()> {
-        run_proxy_direct().await?;
-        Ok(())
-    }
-
-    pub async fn run_proxy() -> std::io::Result<()> {
-        if *crate::proxy::REUSE_SOCKET {
-            tokio::time::sleep(Duration::from_millis(500)).await;
-
-            if let Err(_) = run_proxy_io().await {
-                run_proxy_direct().await?;
-            }
-        } else {
-            run_proxy_direct().await?;
-        }
-
-        Ok(())
     }
 
     async fn handle_connection(client_stream: &mut TcpStream) -> std::io::Result<()> {
