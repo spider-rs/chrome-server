@@ -144,9 +144,8 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrome_server"
-version = "0.2.18"
+version = "0.2.19"
 dependencies = [
- "bytes",
  "cached",
  "http-body-util",
  "hyper",

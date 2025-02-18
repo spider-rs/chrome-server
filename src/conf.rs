@@ -218,12 +218,16 @@ lazy_static! {
         let mut hostname = String::new();
 
         if let Ok(name) = std::env::var("HOSTNAME_OVERRIDE") {
-            hostname = name;
+            if !name.is_empty() {
+                hostname = name;
+            }
         }
 
         if hostname.is_empty() {
             if let Ok(name) = std::env::var("HOSTNAME") {
-                hostname = name;
+                if name.is_empty() {
+                    hostname = name;
+                }
             }
         }
 

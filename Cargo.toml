@@ -1,6 +1,6 @@
 [package]
 name = "chrome_server"
-version = "0.2.18"
+version = "0.2.19"
 edition = "2021"
 authors = [
     "j-mendez <jeff@spider.cloud>"
@@ -13,12 +13,11 @@ categories = ["web-programming", "command-line-utilities"]
 
 [dependencies]
 hyper = { version = "1", features = ["full"] }
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["rt-multi-thread", "signal", "macros", "net"] }
 http-body-util = "0.1"
 hyper-util = { version = "0.1", features = ["full"] }
 lazy_static = "1"
 openssl = { version = "0.10", features = ["vendored"] }
 openssl-sys = { version = "0.9", features = ["vendored"] }
-bytes = "1"
 tracing = "0.1"
 cached = { version = "0", features = ["async", "async_tokio_rt_multi_thread"]}

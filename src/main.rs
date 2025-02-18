@@ -12,17 +12,20 @@ use conf::{
 };
 use core::sync::atomic::Ordering;
 use http_body_util::Full;
-use hyper::body::{Bytes, Incoming};
-use hyper::server::conn::http1;
-use hyper::service::service_fn;
-use hyper::{Method, Request, Response, StatusCode};
+use hyper::{
+    body::{Bytes, Incoming},
+    server::conn::http1,
+    service::service_fn,
+    Method, Request, Response, StatusCode,
+};
 use hyper_util::rt::TokioIo;
 use std::convert::Infallible;
 use std::net::SocketAddr;
 use std::process::Command;
-use tokio::net::TcpListener;
-use tokio::net::TcpStream;
-use tokio::signal;
+use tokio::{
+    net::{TcpListener, TcpStream},
+    signal,
+};
 
 /// Shutdown the chrome instance by process id
 #[cfg(target_os = "windows")]
@@ -109,6 +112,11 @@ async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
     let req = Request::builder()
         .method(Method::GET)
         .uri("/json/version")
+        .header(
+            hyper::header::HOST,
+            url.authority()
+                .map_or_else(|| "localhost".to_string(), |f| f.as_str().to_string()),
+        )
         .header(hyper::header::CONTENT_TYPE, "application/json")
         .body(http_body_util::Empty::<Bytes>::new())
         .expect("Failed to build the request");
@@ -139,14 +147,13 @@ async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
             while let Some(next) = resp.frame().await {
                 if let Ok(frame) = next {
                     if let Some(chunk) = frame.data_ref() {
-                        bytes_mut.extend_from_slice(&chunk);
+                        bytes_mut.extend(chunk);
                     }
                 }
             }
 
             if !HOST_NAME.is_empty() {
                 let body = modify::modify_json_output(bytes_mut.into());
-
                 Some(body)
             } else {
                 Some(bytes_mut.into())
