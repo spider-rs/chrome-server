@@ -29,8 +29,7 @@ pub(crate) mod proxy {
     use std::net::SocketAddr;
     use tokio::net::{TcpListener, TcpStream};
 
-    /// Run the direct proxy connection.
-    pub async fn run_proxy_direct() -> std::io::Result<()> {
+    pub async fn run_proxy() -> std::io::Result<()> {
         let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
         println!("Proxy Listening on {}", *crate::proxy::ENTRY);
 
@@ -43,48 +42,6 @@ pub(crate) mod proxy {
                 }
             });
         }
-    }
-
-    /// Keep a direct connection to the server up.
-    pub async fn run_proxy_io() -> std::io::Result<()> {
-        let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
-        let std_stream = std::net::TcpStream::connect(*crate::proxy::TARGET)?;
-        std_stream.set_nonblocking(true)?;
-        std_stream.set_nodelay(true)?;
-
-        println!("Proxy Listening on {}", *crate::proxy::ENTRY);
-
-        loop {
-            let (mut client_stream, client_addr) = listener.accept().await?;
-            let std_stream = std_stream.try_clone()?;
-
-            tokio::spawn(async move {
-                match TcpStream::from_std(std_stream) {
-                    Ok(mut server_stream) => {
-                        let _ = tokio::io::copy_bidirectional_with_sizes(
-                            &mut client_stream,
-                            &mut server_stream,
-                            *crate::proxy::BUFFER_SIZE,
-                            *crate::proxy::BUFFER_SIZE,
-                        )
-                        .await;
-                    }
-                    _ => {
-                        if let Err(err) = handle_connection(&mut client_stream, client_addr).await {
-                            tracing::error!("Error handling connection: {}", err);
-                        }
-                    }
-                }
-            });
-        }
-    }
-
-    pub async fn run_proxy() -> std::io::Result<()> {
-        if let Err(_) = run_proxy_io().await {
-            run_proxy_direct().await?;
-        }
-
-        Ok(())
     }
 
     async fn handle_connection(
