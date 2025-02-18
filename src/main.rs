@@ -75,6 +75,7 @@ fn fork(
     let id = if !lightpanda_build {
         let mut command = Command::new(chrome_path);
         let mut chrome_args = CHROME_ARGS.map(|e| e.to_string());
+
         if !chrome_address.is_empty() {
             chrome_args[0] = format!("--remote-debugging-address={}", &chrome_address.to_string());
         }
@@ -246,7 +247,7 @@ async fn run_main() {
 
     let chrome_address = std::env::args().nth(2).unwrap_or("127.0.0.1".to_string());
     let auto_start = std::env::args().nth(3).unwrap_or_else(|| {
-        let auto = std::env::var("CHROME_INIT").unwrap_or("false".into());
+        let auto = std::env::var("CHROME_INIT").unwrap_or("true".into());
         if auto == "true" {
             "init".into()
         } else {
