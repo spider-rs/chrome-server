@@ -27,6 +27,33 @@ use tokio::{
     signal,
 };
 
+use std::time::Duration;
+use tokio::time::{sleep, timeout};
+
+/// Attempt the connection.
+async fn connect_with_retries(address: &str) -> Option<TcpStream> {
+    let mut attempts = 0;
+    loop {
+        match timeout(Duration::from_secs(1), TcpStream::connect(address)).await {
+            Ok(Ok(stream)) => return Some(stream), // Successfully connected
+            Ok(Err(e)) => {
+                attempts += 1;
+                eprintln!("Failed to connect: {}. Attempt {} of 2", e, attempts);
+            }
+            Err(_) => {
+                attempts += 1;
+                eprintln!("Connection attempt timed out. Attempt {} of 2", attempts);
+            }
+        }
+
+        if attempts >= 2 {
+            return None;
+        }
+
+        sleep(Duration::from_secs(1)).await;
+    }
+}
+
 /// Shutdown the chrome instance by process id
 #[cfg(target_os = "windows")]
 fn shutdown(pid: &u32) {
@@ -126,43 +153,45 @@ async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
 
     let address = format!("{}:{}", host, port);
 
-    let stream = TcpStream::connect(address).await.expect("valid address");
+    let resp = if let Some(stream) = connect_with_retries(&address).await {
+        let io = TokioIo::new(stream);
 
-    let io = TokioIo::new(stream);
+        let (mut client, conn) = hyper::client::conn::http1::handshake(io).await.unwrap();
 
-    let (mut client, conn) = hyper::client::conn::http1::handshake(io).await.unwrap();
+        tokio::task::spawn(async move {
+            if let Err(err) = conn.await {
+                println!("Connection failed: {:?}", err);
+            }
+        });
 
-    tokio::task::spawn(async move {
-        if let Err(err) = conn.await {
-            println!("Connection failed: {:?}", err);
-        }
-    });
+        match client.send_request(req).await {
+            Ok(mut resp) => {
+                IS_HEALTHY.store(true, Ordering::Relaxed);
 
-    let resp = match client.send_request(req).await {
-        Ok(mut resp) => {
-            IS_HEALTHY.store(true, Ordering::Relaxed);
+                let mut bytes_mut = vec![];
 
-            let mut bytes_mut = vec![];
-
-            while let Some(next) = resp.frame().await {
-                if let Ok(frame) = next {
-                    if let Some(chunk) = frame.data_ref() {
-                        bytes_mut.extend(chunk);
+                while let Some(next) = resp.frame().await {
+                    if let Ok(frame) = next {
+                        if let Some(chunk) = frame.data_ref() {
+                            bytes_mut.extend(chunk);
+                        }
                     }
                 }
-            }
 
-            if !HOST_NAME.is_empty() {
-                let body = modify::modify_json_output(bytes_mut.into());
-                Some(body)
-            } else {
-                Some(bytes_mut.into())
+                if !HOST_NAME.is_empty() {
+                    let body = modify::modify_json_output(bytes_mut.into());
+                    Some(body)
+                } else {
+                    Some(bytes_mut.into())
+                }
+            }
+            _ => {
+                IS_HEALTHY.store(false, Ordering::Relaxed);
+                None
             }
         }
-        _ => {
-            IS_HEALTHY.store(false, Ordering::Relaxed);
-            None
-        }
+    } else {
+        None
     };
 
     resp
