@@ -1,6 +1,6 @@
 [package]
 name = "chrome_server"
-version = "0.2.20"
+version = "0.2.21"
 edition = "2021"
 authors = [
     "j-mendez <jeff@spider.cloud>"
@@ -10,6 +10,7 @@ license = "MIT"
 repository = "https://github.com/spider-rs/chrome-server"
 documentation = "https://docs.rs/chrome_server"
 categories = ["web-programming", "command-line-utilities"]
+keywords = ["chrome", "proxy"]
 
 [dependencies]
 hyper = { version = "1", features = ["full"] }
