@@ -107,8 +107,6 @@ pub(crate) mod proxy {
         if *crate::proxy::REUSE_SOCKET {
             tokio::time::sleep(Duration::from_millis(500)).await;
 
-            let std_stream = std::net::TcpStream::connect(*crate::proxy::TARGET)?;
-
             if let Err(_) = run_proxy_io().await {
                 run_proxy_direct().await?;
             }
