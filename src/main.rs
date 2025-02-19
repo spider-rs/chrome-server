@@ -304,17 +304,23 @@ async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let listener = TcpListener::bind(addr).await.expect("connection");
 
     let make_svc = async move {
+        let builder_options = std::sync::Arc::new(
+            http1::Builder::new()
+                .preserve_header_case(true)
+                .title_case_headers(true)
+                .half_close(true)
+                .header_read_timeout(None)
+                .writev(false)
+                .to_owned(),
+        );
+
         loop {
             if let Ok((tcp, _)) = listener.accept().await {
                 let io = TokioIo::new(tcp);
+                let builder_options = builder_options.clone();
 
                 tokio::task::spawn(async move {
-                    if let Err(err) = http1::Builder::new()
-                        .preserve_header_case(true)
-                        .title_case_headers(true)
-                        .half_close(true)
-                        .header_read_timeout(None)
-                        .writev(false)
+                    if let Err(err) = builder_options
                         // .keep_alive(false)
                         .serve_connection(io, service_fn(request_handler))
                         .await
