@@ -134,7 +134,7 @@ async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
     let url = endpoint_path
         .unwrap_or(&ENDPOINT.as_str())
         .parse::<hyper::Uri>()
-        .unwrap();
+        .expect("valid chrome endpoint");
 
     let req = Request::builder()
         .method(Method::GET)
@@ -156,39 +156,41 @@ async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
     let resp = if let Some(stream) = connect_with_retries(&address).await {
         let io = TokioIo::new(stream);
 
-        let (mut client, conn) = hyper::client::conn::http1::handshake(io).await.unwrap();
+        if let Ok((mut client, conn)) = hyper::client::conn::http1::handshake(io).await {
+            tokio::task::spawn(async move {
+                if let Err(err) = conn.await {
+                    tracing::error!("Connection failed: {:?}", err);
+                }
+            });
 
-        tokio::task::spawn(async move {
-            if let Err(err) = conn.await {
-                tracing::error!("Connection failed: {:?}", err);
-            }
-        });
+            match client.send_request(req).await {
+                Ok(mut resp) => {
+                    IS_HEALTHY.store(true, Ordering::Relaxed);
 
-        match client.send_request(req).await {
-            Ok(mut resp) => {
-                IS_HEALTHY.store(true, Ordering::Relaxed);
+                    let mut bytes_mut = vec![];
 
-                let mut bytes_mut = vec![];
-
-                while let Some(next) = resp.frame().await {
-                    if let Ok(frame) = next {
-                        if let Some(chunk) = frame.data_ref() {
-                            bytes_mut.extend(chunk);
+                    while let Some(next) = resp.frame().await {
+                        if let Ok(frame) = next {
+                            if let Some(chunk) = frame.data_ref() {
+                                bytes_mut.extend(chunk);
+                            }
                         }
                     }
-                }
 
-                if !HOST_NAME.is_empty() {
-                    let body = modify::modify_json_output(bytes_mut.into());
-                    Some(body)
-                } else {
-                    Some(bytes_mut.into())
+                    if !HOST_NAME.is_empty() {
+                        let body = modify::modify_json_output(bytes_mut.into());
+                        Some(body)
+                    } else {
+                        Some(bytes_mut.into())
+                    }
+                }
+                _ => {
+                    IS_HEALTHY.store(false, Ordering::Relaxed);
+                    None
                 }
             }
-            _ => {
-                IS_HEALTHY.store(false, Ordering::Relaxed);
-                None
-            }
+        } else {
+            None
         }
     } else {
         None
@@ -308,6 +310,8 @@ async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
                 tokio::task::spawn(async move {
                     if let Err(err) = http1::Builder::new()
+                        .preserve_header_case(true)
+                        .title_case_headers(true)
                         .serve_connection(io, service_fn(request_handler))
                         .await
                     {
