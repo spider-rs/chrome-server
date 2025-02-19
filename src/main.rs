@@ -312,6 +312,10 @@ async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     if let Err(err) = http1::Builder::new()
                         .preserve_header_case(true)
                         .title_case_headers(true)
+                        .half_close(true)
+                        .header_read_timeout(None)
+                        .writev(false)
+                        // .keep_alive(false)
                         .serve_connection(io, service_fn(request_handler))
                         .await
                     {
