@@ -1,4 +1,4 @@
-FROM rust:alpine3.21.2 AS rustbuilder
+FROM rust:alpine3.21 AS rustbuilder
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY Cargo.* .
 
 RUN cargo install --no-default-features --path .
 
-FROM alpine:3.21.2
+FROM alpine:3.21
 
 # Installs latest Chromium package.
 RUN apk upgrade --no-cache --available \
