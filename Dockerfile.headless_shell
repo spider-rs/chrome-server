@@ -38,7 +38,7 @@ COPY --from=rustbuilder /usr/local/cargo/bin/chrome_server /usr/local/bin/chrome
 COPY ./docker-entrypoint.sh /
 
 RUN apk add --no-cache tini curl sudo nss dbus freetype harfbuzz ca-certificates libxcomposite libxrandr \
-    libxdamage libxext libxshmfence mesa-gl udev gcompat
+    libxdamage libxext libxshmfence mesa-gl udev gcompat at-spi2-core gpm xkeyboard-config libxkbcommon libxrandr alsa-lib
 
 RUN chmod +x /docker-entrypoint.sh
 

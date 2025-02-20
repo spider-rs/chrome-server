@@ -35,8 +35,9 @@ pub(crate) mod proxy {
         loop {
             let (mut client_stream, client_addr) = listener.accept().await?;
             tracing::info!("Accepted connection from {}", client_addr);
-
+            
             tokio::spawn(async move {
+                let _ = client_stream.set_nodelay(true);
                 if let Err(err) = handle_connection(&mut client_stream).await {
                     tracing::error!("Error handling connection: {}", err);
                 }
