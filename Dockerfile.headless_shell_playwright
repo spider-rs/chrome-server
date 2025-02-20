@@ -2,9 +2,6 @@ FROM mcr.microsoft.com/playwright:v1.50.1-noble AS rustbuilder
 
 WORKDIR /app
 
-# RUN apk upgrade --update-cache --available && \
-#     apk add --no-cache gcc make g++ cmake musl-dev perl libressl-dev
-
 # Get Ubuntu packages
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -17,27 +14,14 @@ RUN cargo install --no-default-features --path .
 
 FROM mcr.microsoft.com/playwright:v1.50.1-noble
 
-# WORKDIR /usr/src/app
-
 ARG VERSION=latest
-
-# COPY \
-#     out/$VERSION/headless-shell/ \
-#     /headless-shell/
-
-# COPY out/$VERSION/ffmpeg-* /
 
 COPY ./build-unpatched.sh .
 COPY local.conf /etc/fonts/local.conf
 
 RUN apt-get update && apt-get install -y \
     build-essential \
-    tini curl sudo
-
-# RUN apk add --no-cache tini curl sudo nss dbus freetype harfbuzz ca-certificates libxcomposite libxrandr \
-#     libxdamage libxext libxshmfence mesa-gl udev ttf-freefont font-noto-emoji font-wqy-zenhei npm
-
-# RUN npm install playwright && PLAYWRIGHT_BROWSERS_PATH=./chrome-headless-shell ./node_modules/.bin/playwright install chromium --only-shell --with-deps
+    tini curl
 
 RUN ./build-unpatched.sh
 
@@ -46,9 +30,6 @@ RUN mkdir -p /usr/src/app \
     && useradd -m chrome \
     && chown -R chrome:chrome /usr/src/app
 
-# ENV CHROME_BIN=/usr/bin/chromium-browser \
-#     CHROME_PATH=/headless-shell:$PATH
-
 EXPOSE 9222 6000 9223
 
 USER root
@@ -56,18 +37,12 @@ USER root
 COPY --from=rustbuilder /root/.cargo/bin/chrome_server /usr/local/bin/chrome_server
 COPY ./docker-entrypoint.sh /
 
-# chromium-swiftshader ttf-freefont font-noto-emoji font-wqy-zenhei
-# ffmpeg-1011
-
 RUN chmod +x /docker-entrypoint.sh
-
-# USER chrome
 
 ENV REMOTE_ADDRESS=0.0.0.0
 ENV LAUNCH=init
 ENV DEFAULT_PORT=9223
 ENV DEFAULT_PORT_SERVER=6000
-# ENV HOSTNAME_OVERRIDE=127.0.0.1
 ENV DEFAULT_LAUNCH_NAME=/out/latest/headless-shell/headless-shell
 
 ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]
