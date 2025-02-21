@@ -42,7 +42,6 @@ pub(crate) mod proxy {
             tracing::info!("Accepted connection from {}", client_addr);
             
             tokio::spawn(async move {
-                let _ = client_stream.set_nodelay(true);
                 if let Err(err) = handle_connection(&mut client_stream).await {
                     tracing::error!("Error handling connection: {}", err);
                 }
@@ -59,7 +58,7 @@ pub(crate) mod proxy {
                     server_stream = Some(stream);
                 }
                 Err(e) => {
-                    tokio::time::sleep(Duration::from_millis(200)).await;
+                    tokio::time::sleep(Duration::from_millis(250)).await;
                     tracing::warn!(
                         "Failed to connect to server (attempt {}): {}",
                         attempts + 1,
