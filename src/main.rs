@@ -135,7 +135,7 @@ async fn fork(port: Option<u32>) -> String {
 }
 
 /// Get json endpoint for chrome instance proxying
-#[once(option = true, sync_writes = true)]
+#[once(option = true, sync_writes = true, time = 60)]
 async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
     use http_body_util::BodyExt;
 

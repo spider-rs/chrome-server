@@ -1,4 +1,5 @@
 use hyper::body::Bytes;
+
 /// modify the json output for the bytes hosting. The headless instance cannot accept external request so we use the proxy.
 pub(crate) fn modify_json_output(body_bytes: Bytes) -> Bytes {
     let buffer = body_bytes.as_ref();
