@@ -1,9 +1,5 @@
-// use std::time::Duration;
-// use hyper_util::client::legacy::Client;
-// use hyper_util::rt::TokioExecutor;
-
 use std::collections::HashSet;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, AtomicU64};
 
 /// Get the default chrome bin location per OS.
 fn get_default_chrome_bin() -> &'static str {
@@ -274,5 +270,12 @@ lazy_static! {
     pub(crate) static ref LIGHT_PANDA: bool = {
         CHROME_PATH.ends_with("lightpanda-aarch64-macos")
         || CHROME_PATH.ends_with("lightpanda-x86_64-linux")
+    };
+    pub static ref CACHEABLE: AtomicBool = {
+        AtomicBool::new(true)
+    };
+    /// The last cache date period.
+    pub static ref LAST_CACHE: AtomicU64 = {
+        AtomicU64::new(0)
     };
 }

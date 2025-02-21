@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 lazy_static::lazy_static! {
     /// Entry port to the proxy.
     static ref ENTRY: &'static str = {
@@ -23,20 +25,26 @@ lazy_static::lazy_static! {
             .unwrap_or(131072); // Default to 128kb
         buffer_size
     };
+
+    /// 10 sec cache
+    static ref TEN_SECONDS: Duration = {
+        Duration::from_secs(10)
+    };
+
 }
 
 pub(crate) mod proxy {
-    use std::io::ErrorKind;
+    use std::{io::ErrorKind, time::Instant};
     use tokio::{
         io::{AsyncReadExt, AsyncWriteExt},
         net::{TcpListener, TcpStream},
     };
-
-    use crate::{connect_with_retries, fork, shutdown_instances};
+    use crate::{connect_with_retries, fork, shutdown_instances, CACHEABLE, LAST_CACHE};
 
     pub async fn run_proxy() -> std::io::Result<()> {
         let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
         println!("Proxy Listening on {}", *crate::proxy::ENTRY);
+        let base_time = Instant::now();
 
         loop {
             let (mut client_stream, client_addr) = listener.accept().await?;
@@ -50,12 +58,29 @@ pub(crate) mod proxy {
                         should_retry = true;
                         tracing::error!("Error handling connection: {}. Restarting Chrome.", err);
                         // send a signal instead or channel to prevent race
+                        // todo: we need to swap to a new port and use a LB to track the drain to reset the ports used.
                         shutdown_instances().await;
                         fork(Some(*crate::DEFAULT_PORT)).await;
+                        CACHEABLE.store(false, std::sync::atomic::Ordering::Relaxed);
+                        LAST_CACHE.store(
+                            base_time.elapsed().as_secs().try_into().unwrap_or_default(),
+                            std::sync::atomic::Ordering::Relaxed,
+                        );
                     } else {
                         // ignore connection resets by peer
                         if err.kind() != ErrorKind::ConnectionReset {
                             tracing::error!("Error handling connection: {}", err);
+                        }
+                    }
+                } else {
+                    let elasped = LAST_CACHE.load(std::sync::atomic::Ordering::Relaxed);
+
+                    if elasped > 0 {
+                        let duration = tokio::time::Duration::from_secs(elasped);
+                        let future_time = Instant::now() + duration;
+
+                        if future_time.elapsed() >= *crate::proxy::TEN_SECONDS {
+                            CACHEABLE.store(true, std::sync::atomic::Ordering::Relaxed);
                         }
                     }
                 }

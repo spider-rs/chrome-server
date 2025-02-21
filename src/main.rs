@@ -14,9 +14,11 @@ mod modify;
 mod proxy;
 
 use conf::{
-    CHROME_ADDRESS, CHROME_ARGS, CHROME_INSTANCES, CHROME_PATH, DEFAULT_PORT, DEFAULT_PORT_SERVER,
-    ENDPOINT, HOST_NAME, IS_HEALTHY, LIGHTPANDA_ARGS, LIGHT_PANDA, TARGET_REPLACEMENT,
+    CACHEABLE, CHROME_ADDRESS, CHROME_ARGS, CHROME_INSTANCES, CHROME_PATH, DEFAULT_PORT,
+    DEFAULT_PORT_SERVER, ENDPOINT, HOST_NAME, IS_HEALTHY, LAST_CACHE, LIGHTPANDA_ARGS, LIGHT_PANDA,
+    TARGET_REPLACEMENT,
 };
+
 use core::sync::atomic::Ordering;
 use http_body_util::Full;
 use hyper::{
@@ -135,8 +137,7 @@ async fn fork(port: Option<u32>) -> String {
 }
 
 /// Get json endpoint for chrome instance proxying
-#[once(option = true, sync_writes = true, time = 60)]
-async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
+async fn version_handler_bytes_base(endpoint_path: Option<&str>) -> Option<Bytes> {
     use http_body_util::BodyExt;
 
     let url = endpoint_path
@@ -207,6 +208,12 @@ async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
     resp
 }
 
+/// Get json endpoint for chrome instance proxying
+#[once(option = true, sync_writes = true, time = 10)]
+async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
+    version_handler_bytes_base(endpoint_path).await
+}
+
 /// Health check handler
 async fn health_check_handler() -> Result<Response<Full<Bytes>>, Infallible> {
     if IS_HEALTHY.load(Ordering::Relaxed) {
@@ -268,7 +275,12 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
             }
         }
         (&Method::GET, "/json/version") => {
-            let body = version_handler_bytes(None).await.unwrap_or_default();
+            let body = if CACHEABLE.load(Ordering::Relaxed) {
+                version_handler_bytes(None).await.unwrap_or_default()
+            } else {
+                version_handler_bytes_base(None).await.unwrap_or_default()
+            };
+
             let empty = body.is_empty();
             let mut resp = Response::new(Full::new(body));
 
