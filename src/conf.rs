@@ -51,7 +51,7 @@ lazy_static! {
         default_port
     };
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 81] = {
+    pub static ref CHROME_ARGS: [&'static str; 78] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -147,7 +147,6 @@ lazy_static! {
             "--disable-partial-raster",
             "--disable-in-process-stack-traces",
             "--use-angle=swiftshader",
-            "--block-new-web-contents",
             "--disable-low-res-tiling",
             "--disable-speech-api",
             "--disable-smooth-scrolling",
@@ -173,8 +172,9 @@ lazy_static! {
             "--disable-backgrounding-occluded-windows",
             "--log-level=3",
             "--enable-logging=stderr",
-            "--disable-dns-proxy",
             "--font-render-hinting=none",
+            // "--block-new-web-contents",
+            // "--disable-dns-proxy",
             // "--enable-root-ns-dns-proxy",
             "--ip-protection-proxy-opt-out",
             "--unsafely-disable-devtools-self-xss-warning",
@@ -188,7 +188,6 @@ lazy_static! {
             "--password-store=basic",
             "--export-tagged-pdf",
             "--no-pings",
-            "--scheduler-configuration",
             "--rusty-png",
             "--disable-histogram-customizer",
             use_gl,
