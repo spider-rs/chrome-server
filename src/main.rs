@@ -46,7 +46,7 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
             Ok(Ok(stream)) => return Some(stream),
             Ok(Err(e)) => {
                 attempts += 1;
-                tracing::error!("Failed to connect: {}. Attempt {} of 5", e, attempts);
+                tracing::warn!("Failed to connect: {}. Attempt {} of 5", e, attempts);
             }
             Err(_) => {
                 attempts += 1;
