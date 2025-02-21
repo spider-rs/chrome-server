@@ -263,7 +263,13 @@ lazy_static! {
         })
     };
     pub(crate) static ref CHROME_ADDRESS: String = {
-        std::env::args().nth(2).unwrap_or("127.0.0.1".to_string()).to_string()
+        let mut host_address = std::env::args().nth(2).unwrap_or("127.0.0.1".to_string()).to_string();
+
+        if host_address.is_empty() {
+            host_address = String::from("127.0.0.1").into()
+        }
+
+        host_address
     };
     pub(crate) static ref LIGHT_PANDA: bool = {
         CHROME_PATH.ends_with("lightpanda-aarch64-macos")
