@@ -29,7 +29,7 @@ pub(crate) mod proxy {
     use std::time::Duration;
 
     use tokio::{
-        io::AsyncWriteExt,
+        // io::AsyncWriteExt,
         net::{TcpListener, TcpStream},
     };
 
@@ -72,7 +72,7 @@ pub(crate) mod proxy {
                 }
                 Err(e) => {
                     tokio::time::sleep(Duration::from_millis(200)).await;
-                    tracing::error!(
+                    tracing::warn!(
                         "Failed to connect to server (attempt {}): {}",
                         attempts + 1,
                         e
