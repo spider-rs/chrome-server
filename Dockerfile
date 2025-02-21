@@ -8,7 +8,7 @@ RUN apk upgrade --update-cache --available && \
 COPY src/ ./src
 COPY Cargo.* .
 
-RUN cargo install --no-default-features --path .
+RUN RUST_LOG=error cargo install --no-default-features --path .
 
 FROM alpine:3.21
 

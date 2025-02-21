@@ -47,19 +47,20 @@ pub(crate) mod proxy {
         let mut server_stream: Option<TcpStream> = None;
         let mut attempts = 0;
 
-        while attempts < 10 {
+        while attempts < 10 && server_stream.is_none() {
             match TcpStream::connect(*crate::proxy::TARGET).await {
                 Ok(stream) => {
                     if let Ok(err) = stream.take_error() {
                         if err.is_none() {
-                            // let _ = stream.set_nodelay(true);
-                            // let _ = client_stream.set_nodelay(true);
+                            if let Some(e) = err {
+                                tracing::error!("Err: {:?}", e)
+                            }
                             server_stream = Some(stream);
                             break;
+                        } else {
+                            tracing::error!("{:?}", err)
                         }
                     } else {
-                        let _ = stream.set_nodelay(true);
-                        let _ = client_stream.set_nodelay(true);
                         server_stream = Some(stream);
                         break;
                     }

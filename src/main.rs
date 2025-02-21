@@ -283,6 +283,8 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
 
 /// Main entry for the proxy.
 async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    tracing_subscriber::fmt::init();
+
     let auto_start = std::env::args().nth(3).unwrap_or_else(|| {
         let auto = std::env::var("CHROME_INIT").unwrap_or("true".into());
         if auto == "true" {

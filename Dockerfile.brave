@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
 COPY src/ ./src
 COPY Cargo.* .
 
-RUN cargo install --no-default-features --path .
+RUN RUST_LOG=error cargo install --no-default-features --path .
 
 FROM ubuntu:25.04
 
