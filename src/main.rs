@@ -42,15 +42,15 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
     let mut attempts = 0;
 
     loop {
-        match timeout(Duration::from_secs(1), TcpStream::connect(address)).await {
+        match timeout(Duration::from_secs(5), TcpStream::connect(address)).await {
             Ok(Ok(stream)) => return Some(stream),
             Ok(Err(e)) => {
                 attempts += 1;
-                tracing::warn!("Failed to connect: {}. Attempt {} of 5", e, attempts);
+                tracing::warn!("Failed to connect: {}. Attempt {} of 10", e, attempts);
             }
             Err(_) => {
                 attempts += 1;
-                tracing::error!("Connection attempt timed out. Attempt {} of 5", attempts);
+                tracing::error!("Connection attempt timed out. Attempt {} of 10", attempts);
             }
         }
 
