@@ -1,0 +1,55 @@
+FROM ubuntu:25.04 AS rustbuilder
+
+WORKDIR /app
+
+# Get Ubuntu packages
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cargo
+
+COPY src/ ./src
+COPY Cargo.* .
+
+RUN cargo install --no-default-features --path .
+
+FROM ubuntu:25.04
+
+ARG VERSION=latest
+
+COPY ./build-unpatched.sh .
+COPY local.conf /etc/fonts/local.conf
+
+RUN apt-get update -y
+RUN apt-get install -y apt-utils software-properties-common apt-transport-https
+RUN apt-get upgrade -y
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    tini curl sudo
+
+RUN curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+RUN echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main"|sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+RUN apt-get update -y
+RUN apt-get install -y brave-browser
+    
+# Add Chrome as a user
+RUN mkdir -p /usr/src/app \
+    && useradd -m chrome \
+    && chown -R chrome:chrome /usr/src/app
+
+EXPOSE 9222 6000 9223
+
+USER root
+
+COPY --from=rustbuilder /root/.cargo/bin/chrome_server /usr/local/bin/chrome_server
+COPY ./docker-entrypoint.sh /
+
+RUN chmod +x /docker-entrypoint.sh
+
+ENV REMOTE_ADDRESS=0.0.0.0
+ENV LAUNCH=init
+ENV DEFAULT_PORT=9223
+ENV DEFAULT_PORT_SERVER=6000
+ENV DEFAULT_LAUNCH_NAME=brave-browser
+
+ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]

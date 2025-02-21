@@ -33,20 +33,21 @@ use tokio::time::{sleep, timeout};
 /// Attempt the connection.
 async fn connect_with_retries(address: &str) -> Option<TcpStream> {
     let mut attempts = 0;
+
     loop {
         match timeout(Duration::from_secs(1), TcpStream::connect(address)).await {
             Ok(Ok(stream)) => return Some(stream),
             Ok(Err(e)) => {
                 attempts += 1;
-                tracing::error!("Failed to connect: {}. Attempt {} of 3", e, attempts);
+                tracing::error!("Failed to connect: {}. Attempt {} of 5", e, attempts);
             }
             Err(_) => {
                 attempts += 1;
-                tracing::error!("Connection attempt timed out. Attempt {} of 3", attempts);
+                tracing::error!("Connection attempt timed out. Attempt {} of 5", attempts);
             }
         }
 
-        if attempts >= 3 {
+        if attempts >= 5 {
             return None;
         }
 
