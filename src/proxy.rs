@@ -72,7 +72,7 @@ pub(crate) mod proxy {
                             tracing::error!("Error handling connection: {}", err);
                         }
                     }
-                } else {
+                } else if !CACHEABLE.load(std::sync::atomic::Ordering::Relaxed) {
                     let elasped = LAST_CACHE.load(std::sync::atomic::Ordering::Relaxed);
 
                     if elasped > 0 {
