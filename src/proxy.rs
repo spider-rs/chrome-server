@@ -26,14 +26,13 @@ lazy_static::lazy_static! {
 }
 
 pub(crate) mod proxy {
-    use std::{io::ErrorKind, time::Duration};
-
+    use std::io::ErrorKind;
     use tokio::{
-        // io::AsyncWriteExt,
+        io::{AsyncReadExt, AsyncWriteExt},
         net::{TcpListener, TcpStream},
     };
 
-    use crate::{fork, shutdown_instances};
+    use crate::{connect_with_retries, fork, shutdown_instances};
 
     pub async fn run_proxy() -> std::io::Result<()> {
         let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
@@ -70,34 +69,46 @@ pub(crate) mod proxy {
     }
 
     async fn handle_connection(client_stream: &mut TcpStream) -> std::io::Result<()> {
-        let mut server_stream: Option<TcpStream> = None;
-        let mut attempts = 0;
-
-        while attempts < 10 && server_stream.is_none() {
-            match TcpStream::connect(*crate::proxy::TARGET).await {
-                Ok(stream) => {
-                    server_stream = Some(stream);
-                }
-                Err(e) => {
-                    tokio::time::sleep(Duration::from_millis(250)).await;
-                    tracing::warn!(
-                        "Failed to connect to server (attempt {}): {}",
-                        attempts + 1,
-                        e
-                    );
-                    attempts += 1;
-                }
-            }
-        }
+        let server_stream: Option<TcpStream> = connect_with_retries(*crate::proxy::TARGET).await;
 
         if let Some(mut server_stream) = server_stream {
-            tokio::io::copy_bidirectional_with_sizes(
-                client_stream,
-                &mut server_stream,
-                *crate::proxy::BUFFER_SIZE,
-                *crate::proxy::BUFFER_SIZE,
-            )
-            .await?;
+            let buffer_size = *crate::proxy::BUFFER_SIZE;
+            let mut buf1 = vec![0u8; buffer_size].into_boxed_slice();
+            let mut buf2 = vec![0u8; buffer_size].into_boxed_slice();
+
+            loop {
+                tokio::select! {
+                    a = server_stream.read(&mut buf1) => {
+                        let size = match a{
+                            Ok(p) => p,
+                            Err(_) => break,
+                        };
+                        if size == 0 {
+                            break;
+                        }
+                        match client_stream.write_all(&buf1[..size]).await{
+                            Ok(_) => {},
+                            Err(_) => break,
+                        };
+                    },
+                    b = client_stream.read(&mut buf2) => {
+                        let size = match b{
+                            Ok(p) => p,
+                            Err(_) => break,
+                        };
+                        if size == 0 {
+                            break;
+                        }
+                        match server_stream.write_all(&buf2[..size]).await{
+                            Ok(_) => {},
+                            Err(_) => break,
+                        };
+                    },
+                    else => {
+                        break;
+                    }
+                }
+            }
 
             Ok(())
         } else {
