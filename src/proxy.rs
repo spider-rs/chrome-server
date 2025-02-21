@@ -35,32 +35,55 @@ pub(crate) mod proxy {
         loop {
             let (mut client_stream, client_addr) = listener.accept().await?;
             tracing::info!("Accepted connection from {}", client_addr);
-            
+
             tokio::spawn(async move {
-                let _ = client_stream.set_nodelay(true);
                 if let Err(err) = handle_connection(&mut client_stream).await {
                     tracing::error!("Error handling connection: {}", err);
                 }
             });
         }
     }
-
     async fn handle_connection(client_stream: &mut TcpStream) -> std::io::Result<()> {
-        match TcpStream::connect(*crate::proxy::TARGET).await {
-            Ok(mut server_stream) => {
-                tokio::io::copy_bidirectional_with_sizes(
-                    client_stream,
-                    &mut server_stream,
-                    *crate::proxy::BUFFER_SIZE,
-                    *crate::proxy::BUFFER_SIZE,
-                )
-                .await?;
-                Ok(())
+        let mut server_stream: Option<TcpStream> = None;
+        let mut attempts = 0;
+
+        while attempts < 10 {
+            match TcpStream::connect(*crate::proxy::TARGET).await {
+                Ok(stream) => {
+                    if let Ok(err) = stream.take_error() {
+                        if err.is_none() {
+                            let _ = stream.set_nodelay(true);
+                            let _ = client_stream.set_nodelay(true);
+                            server_stream = Some(stream);
+                            break;
+                        }
+                    }
+                }
+                Err(e) => {
+                    tracing::error!(
+                        "Failed to connect to server (attempt {}): {}",
+                        attempts + 1,
+                        e
+                    );
+                    attempts += 1;
+                }
             }
-            Err(e) => {
-                tracing::error!("Failed to connect to server: {}", e);
-                Err(e)
-            }
+        }
+
+        if let Some(mut server_stream) = server_stream {
+            tokio::io::copy_bidirectional_with_sizes(
+                client_stream,
+                &mut server_stream,
+                *crate::proxy::BUFFER_SIZE,
+                *crate::proxy::BUFFER_SIZE,
+            )
+            .await?;
+            Ok(())
+        } else {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Failed to connect after several attempts",
+            ))
         }
     }
 }

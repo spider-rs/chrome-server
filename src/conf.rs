@@ -92,12 +92,37 @@ lazy_static! {
             _ => "--use-gl=angle"
         };
 
+        let gpu_enabled = match std::env::var("ENABLE_GPU") {
+            Ok(h) => {
+                if h == "true" {
+                   ""
+                } else {
+                 "--disable-gpu"
+                }
+            }
+            _ =>  "--disable-gpu"
+        };
+
+        let gpu_enabled_sandboxed = match std::env::var("ENABLE_GPU") {
+            Ok(h) => {
+                if h == "true" {
+                   ""
+                } else {
+                "--disable-gpu-sandbox"
+                }
+            }
+            _ => "--disable-gpu-sandbox"
+        };
+
         [
             // *SPECIAL*
             "--remote-debugging-address=0.0.0.0",
             port,
             // *SPECIAL*
             headless,
+            gpu_enabled,
+            gpu_enabled_sandboxed,
+            use_gl,
             "--no-first-run",
             "--no-sandbox",
             "--disable-setuid-sandbox",
@@ -108,8 +133,6 @@ lazy_static! {
             "--autoplay-policy=user-gesture-required",
             "--ignore-certificate-errors",
             "--no-default-browser-check",
-            "--disable-gpu",
-            "--disable-gpu-sandbox",
             "--disable-dev-shm-usage", // required or else container will crash not enough memory
             "--disable-threaded-scrolling",
             "--disable-demo-mode",
@@ -166,7 +189,6 @@ lazy_static! {
             "--scheduler-configuration",
             "--rusty-png",
             "--disable-histogram-customizer",
-            use_gl,
             "--window-size=1400,820",
             "--disable-vulkan-fallback-to-gl-for-testing",
             "--disable-vulkan-surface",

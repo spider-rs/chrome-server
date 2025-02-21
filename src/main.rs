@@ -8,15 +8,15 @@ mod proxy;
 
 use conf::{
     CHROME_ADDRESS, CHROME_ARGS, CHROME_INSTANCES, CHROME_PATH, DEFAULT_PORT, DEFAULT_PORT_SERVER,
-    ENDPOINT, HOST_NAME, IS_HEALTHY, LIGHTPANDA_ARGS, LIGHT_PANDA, TARGET_REPLACEMENT,
+    ENDPOINT, HOST_NAME, IS_HEALTHY, LIGHT_PANDA, LIGHTPANDA_ARGS, TARGET_REPLACEMENT,
 };
 use core::sync::atomic::Ordering;
 use http_body_util::Full;
 use hyper::{
+    Method, Request, Response, StatusCode,
     body::{Bytes, Incoming},
     server::conn::http1,
     service::service_fn,
-    Method, Request, Response, StatusCode,
 };
 use hyper_util::rt::TokioIo;
 use std::convert::Infallible;
@@ -256,7 +256,6 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
         (&Method::GET, "/json/version") => {
             let body = version_handler_bytes(None).await.unwrap_or_default();
             let empty = body.is_empty();
-
             let mut resp = Response::new(Full::new(body));
 
             resp.headers_mut().insert(
@@ -308,9 +307,8 @@ async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             http1::Builder::new()
                 .preserve_header_case(true)
                 .title_case_headers(true)
-                .half_close(true)
                 .header_read_timeout(None)
-                .writev(false)
+                .auto_date_header(false)
                 .to_owned(),
         );
 
@@ -321,7 +319,6 @@ async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
                 tokio::task::spawn(async move {
                     if let Err(err) = builder_options
-                        // .keep_alive(false)
                         .serve_connection(io, service_fn(request_handler))
                         .await
                     {
