@@ -34,12 +34,12 @@ lazy_static::lazy_static! {
 }
 
 pub(crate) mod proxy {
+    use crate::{connect_with_retries, fork, shutdown_instances, CACHEABLE, LAST_CACHE};
     use std::{io::ErrorKind, time::Instant};
     use tokio::{
         io::{AsyncReadExt, AsyncWriteExt},
         net::{TcpListener, TcpStream},
     };
-    use crate::{connect_with_retries, fork, shutdown_instances, CACHEABLE, LAST_CACHE};
 
     pub async fn run_proxy() -> std::io::Result<()> {
         let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
@@ -76,10 +76,11 @@ pub(crate) mod proxy {
                     let elasped = LAST_CACHE.load(std::sync::atomic::Ordering::Relaxed);
 
                     if elasped > 0 {
-                        let duration = tokio::time::Duration::from_secs(elasped);
-                        let future_time = Instant::now() + duration;
+                        let elapsed_since_base = base_time.elapsed();
+                        let total_elapsed =
+                            tokio::time::Duration::from_secs(elasped) + elapsed_since_base;
 
-                        if future_time.elapsed() >= *crate::proxy::TEN_SECONDS {
+                        if total_elapsed >= *crate::proxy::TEN_SECONDS {
                             CACHEABLE.store(true, std::sync::atomic::Ordering::Relaxed);
                         }
                     }
