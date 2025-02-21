@@ -92,28 +92,27 @@ lazy_static! {
             _ => "--use-gl=angle"
         };
 
-        let has_gpu = match std::env::var("ENABLE_GPU") {
+        let gpu_enabled = match std::env::var("ENABLE_GPU") {
             Ok(h) => {
                 if h == "true" {
-                   true
+                   ""
                 } else {
-                   false
+                 "--disable-gpu"
                 }
             }
-            _ => false
+            _ =>  "--disable-gpu"
         };
 
-        let gpu_enabled = if !has_gpu {
-            ""
-         } else {
-          "--disable-gpu"
-         };
-
-        let gpu_enabled_sandboxed = if !has_gpu {
-            ""
-         } else {
-         "--disable-gpu-sandbox"
-         };
+        let gpu_enabled_sandboxed = match std::env::var("ENABLE_GPU") {
+            Ok(h) => {
+                if h == "true" {
+                   ""
+                } else {
+                "--disable-gpu-sandbox"
+                }
+            }
+            _ => "--disable-gpu-sandbox"
+        };
 
         [
             // *SPECIAL*
@@ -121,9 +120,6 @@ lazy_static! {
             port,
             // *SPECIAL*
             headless,
-            gpu_enabled,
-            gpu_enabled_sandboxed,
-            use_gl,
             "--no-first-run",
             "--no-sandbox",
             "--disable-setuid-sandbox",
@@ -132,6 +128,8 @@ lazy_static! {
             "--user-data-dir=~/.config/google-chrome",
             "--allow-running-insecure-content",
             "--autoplay-policy=user-gesture-required",
+            gpu_enabled,
+            gpu_enabled_sandboxed,
             "--ignore-certificate-errors",
             "--no-default-browser-check",
             "--disable-dev-shm-usage", // required or else container will crash not enough memory
@@ -190,6 +188,7 @@ lazy_static! {
             "--scheduler-configuration",
             "--rusty-png",
             "--disable-histogram-customizer",
+            use_gl,
             "--window-size=1400,820",
             "--disable-vulkan-fallback-to-gl-for-testing",
             "--disable-vulkan-surface",
