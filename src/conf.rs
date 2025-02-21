@@ -51,7 +51,7 @@ lazy_static! {
         default_port
     };
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 78] = {
+    pub static ref CHROME_ARGS: [&'static str; 79] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -196,6 +196,7 @@ lazy_static! {
             "--disable-webrtc",
             "--disable-blink-features=AutomationControlled",
             "--disable-ipc-flooding-protection",
+            "--brave-shred",
             // "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
             "--disable-features=PaintHolding,HttpsUpgrades,DeferRendererTasksAfterInput,LensOverlay,ThirdPartyStoragePartitioning,IsolateSandboxedIframes,ProcessPerSiteUpToMainFrameThreshold,site-per-process,WebUIJSErrorReportingExtended,DIPS,InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]

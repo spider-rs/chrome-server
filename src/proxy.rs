@@ -52,11 +52,16 @@ pub(crate) mod proxy {
                 Ok(stream) => {
                     if let Ok(err) = stream.take_error() {
                         if err.is_none() {
-                            let _ = stream.set_nodelay(true);
-                            let _ = client_stream.set_nodelay(true);
+                            // let _ = stream.set_nodelay(true);
+                            // let _ = client_stream.set_nodelay(true);
                             server_stream = Some(stream);
                             break;
                         }
+                    } else {
+                        let _ = stream.set_nodelay(true);
+                        let _ = client_stream.set_nodelay(true);
+                        server_stream = Some(stream);
+                        break;
                     }
                 }
                 Err(e) => {
