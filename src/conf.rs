@@ -92,27 +92,28 @@ lazy_static! {
             _ => "--use-gl=angle"
         };
 
-        let gpu_enabled = match std::env::var("ENABLE_GPU") {
+        let has_gpu = match std::env::var("ENABLE_GPU") {
             Ok(h) => {
                 if h == "true" {
-                   ""
+                   true
                 } else {
-                 "--disable-gpu"
+                   false
                 }
             }
-            _ =>  "--disable-gpu"
+            _ => false
         };
 
-        let gpu_enabled_sandboxed = match std::env::var("ENABLE_GPU") {
-            Ok(h) => {
-                if h == "true" {
-                   ""
-                } else {
-                "--disable-gpu-sandbox"
-                }
-            }
-            _ => "--disable-gpu-sandbox"
-        };
+        let gpu_enabled = if !has_gpu {
+            ""
+         } else {
+          "--disable-gpu"
+         };
+
+        let gpu_enabled_sandboxed = if !has_gpu {
+            ""
+         } else {
+         "--disable-gpu-sandbox"
+         };
 
         [
             // *SPECIAL*

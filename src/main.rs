@@ -8,15 +8,15 @@ mod proxy;
 
 use conf::{
     CHROME_ADDRESS, CHROME_ARGS, CHROME_INSTANCES, CHROME_PATH, DEFAULT_PORT, DEFAULT_PORT_SERVER,
-    ENDPOINT, HOST_NAME, IS_HEALTHY, LIGHT_PANDA, LIGHTPANDA_ARGS, TARGET_REPLACEMENT,
+    ENDPOINT, HOST_NAME, IS_HEALTHY, LIGHTPANDA_ARGS, LIGHT_PANDA, TARGET_REPLACEMENT,
 };
 use core::sync::atomic::Ordering;
 use http_body_util::Full;
 use hyper::{
-    Method, Request, Response, StatusCode,
     body::{Bytes, Incoming},
     server::conn::http1,
     service::service_fn,
+    Method, Request, Response, StatusCode,
 };
 use hyper_util::rt::TokioIo;
 use std::convert::Infallible;

@@ -1,6 +1,6 @@
-# chrome
+# headless-browser
 
-Google Chrome server.
+Headless Browser with Proxy and Server.
 
 ## Installation
 
@@ -86,11 +86,13 @@ chrome_server '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' 127
 
 You can build this image using the following:
 
-1. Dockerfile (Default)
+1. Dockerfile (Alpine)
 1. Dockerfile.playwright (Playwright Custom Chrome)
 1. Dockerfile.headless_shell (Manual)
+1. Dockerfile.brave
 1. Dockerfile.headless_shell_playwright (Playwright Headless Shell)
 1. Dockerfile.xvfb (Virtual Display)
+1. Dockerfile.lightpanda
 
 You need to set the env variable passed in as an arg `HOSTNAME_OVERRIDE` to override the docker container and set it to `host.docker.internal`.
 
