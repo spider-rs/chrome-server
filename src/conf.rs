@@ -214,12 +214,6 @@ lazy_static! {
             port,
         ]
     };
-    // pub static ref CLIENT: Client<hyper_util::client::legacy::connect::HttpConnector, hyper_util::client::legacy::Error> = {
-    //     Client::builder(TokioExecutor::new())
-    //     .pool_idle_timeout(Duration::from_secs(30))
-    //     .http2_only(true)
-    //     .build_http()
-    // };
     /// Return base target and replacement. Target port is the port for chrome.
     pub(crate) static ref TARGET_REPLACEMENT: (&'static [u8; 5], &'static[u8; 5]) = {
         if *DEFAULT_PORT == 9223 {

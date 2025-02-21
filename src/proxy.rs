@@ -28,7 +28,10 @@ lazy_static::lazy_static! {
 pub(crate) mod proxy {
     use std::time::Duration;
 
-    use tokio::net::{TcpListener, TcpStream};
+    use tokio::{
+        io::AsyncWriteExt,
+        net::{TcpListener, TcpStream},
+    };
 
     pub async fn run_proxy() -> std::io::Result<()> {
         let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
@@ -87,6 +90,10 @@ pub(crate) mod proxy {
                 *crate::proxy::BUFFER_SIZE,
             )
             .await?;
+
+            // server_stream.flush().await?;
+            // client_stream.flush().await?;
+
             Ok(())
         } else {
             Err(std::io::Error::new(
