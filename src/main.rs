@@ -227,13 +227,19 @@ async fn fork_handler(port: Option<u32>) -> Result<Response<Full<Bytes>>, Infall
     Ok(Response::new(Full::new(Bytes::from(pid))))
 }
 
-/// Shutdown handler
-async fn shutdown_handler() -> Result<Response<Full<Bytes>>, Infallible> {
+pub async fn shutdown_instances() {
     let mut mutx = CHROME_INSTANCES.lock().await;
+
     for pid in mutx.iter() {
         shutdown(pid);
     }
+
     mutx.clear();
+}
+
+/// Shutdown handler
+async fn shutdown_handler() -> Result<Response<Full<Bytes>>, Infallible> {
+    shutdown_instances().await;
 
     Ok(Response::new(Full::new(Bytes::from(
         "Shutdown successful.",

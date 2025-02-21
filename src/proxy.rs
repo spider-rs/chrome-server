@@ -26,12 +26,14 @@ lazy_static::lazy_static! {
 }
 
 pub(crate) mod proxy {
-    use std::time::Duration;
+    use std::{io::ErrorKind, time::Duration};
 
     use tokio::{
         // io::AsyncWriteExt,
         net::{TcpListener, TcpStream},
     };
+
+    use crate::{fork, shutdown_instances};
 
     pub async fn run_proxy() -> std::io::Result<()> {
         let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
@@ -40,14 +42,33 @@ pub(crate) mod proxy {
         loop {
             let (mut client_stream, client_addr) = listener.accept().await?;
             tracing::info!("Accepted connection from {}", client_addr);
-            
+
             tokio::spawn(async move {
+                let mut should_retry = false;
+
                 if let Err(err) = handle_connection(&mut client_stream).await {
-                    tracing::error!("Error handling connection: {}", err);
+                    if err.kind() == ErrorKind::NotConnected || err.kind() == ErrorKind::Other {
+                        should_retry = true;
+                        tracing::error!("Error handling connection: {}. Restarting Chrome.", err);
+                        // send a signal instead or channel to prevent race
+                        shutdown_instances().await;
+                        fork(Some(*crate::DEFAULT_PORT)).await;
+                    } else {
+                        // ignore connection resets by peer
+                        if err.kind() != ErrorKind::ConnectionReset {
+                            tracing::error!("Error handling connection: {}", err);
+                        }
+                    }
+                }
+
+                if should_retry {
+                    tokio::task::yield_now().await;
+                    let _ = handle_connection(&mut client_stream).await;
                 }
             });
         }
     }
+
     async fn handle_connection(client_stream: &mut TcpStream) -> std::io::Result<()> {
         let mut server_stream: Option<TcpStream> = None;
         let mut attempts = 0;
@@ -77,9 +98,6 @@ pub(crate) mod proxy {
                 *crate::proxy::BUFFER_SIZE,
             )
             .await?;
-
-            // server_stream.flush().await?;
-            // client_stream.flush().await?;
 
             Ok(())
         } else {
