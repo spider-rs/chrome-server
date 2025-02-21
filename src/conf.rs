@@ -51,7 +51,7 @@ lazy_static! {
         default_port
     };
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 78] = {
+    pub static ref CHROME_ARGS: [&'static str; 81] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -134,6 +134,7 @@ lazy_static! {
             "--no-default-browser-check",
             "--disable-dev-shm-usage", // required or else container will crash not enough memory
             "--disable-threaded-scrolling",
+            "--disable-cookie-encryption",
             "--disable-demo-mode",
             "--disable-dinosaur-easter-egg",
             "--disable-fetching-hints-at-navigation-start",
@@ -146,6 +147,7 @@ lazy_static! {
             "--disable-partial-raster",
             "--disable-in-process-stack-traces",
             "--use-angle=swiftshader",
+            "--block-new-web-contents",
             "--disable-low-res-tiling",
             "--disable-speech-api",
             "--disable-smooth-scrolling",
@@ -172,6 +174,7 @@ lazy_static! {
             "--log-level=3",
             "--enable-logging=stderr",
             "--disable-dns-proxy",
+            "--font-render-hinting=none",
             // "--enable-root-ns-dns-proxy",
             "--ip-protection-proxy-opt-out",
             "--unsafely-disable-devtools-self-xss-warning",
@@ -189,7 +192,7 @@ lazy_static! {
             "--rusty-png",
             "--disable-histogram-customizer",
             use_gl,
-            "--window-size=1400,820",
+            "--window-size=800,600",
             "--disable-vulkan-fallback-to-gl-for-testing",
             "--disable-vulkan-surface",
             "--disable-webrtc",
