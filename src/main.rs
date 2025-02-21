@@ -324,6 +324,8 @@ async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .preserve_header_case(true)
                 .title_case_headers(true)
                 .header_read_timeout(None)
+                .keep_alive(false)
+                .half_close(true)
                 .auto_date_header(false)
                 .to_owned(),
         );
