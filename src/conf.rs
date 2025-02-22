@@ -91,7 +91,7 @@ lazy_static! {
         let gpu_enabled = match std::env::var("ENABLE_GPU") {
             Ok(h) => {
                 if h == "true" {
-                   ""
+                   "--enable-gpu"
                 } else {
                  "--disable-gpu"
                 }
@@ -102,7 +102,7 @@ lazy_static! {
         let gpu_enabled_sandboxed = match std::env::var("ENABLE_GPU") {
             Ok(h) => {
                 if h == "true" {
-                   ""
+                    "--enable-gpu-sandbox"
                 } else {
                 "--disable-gpu-sandbox"
                 }
