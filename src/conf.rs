@@ -47,7 +47,7 @@ lazy_static! {
         default_port
     };
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 78] = {
+    pub static ref CHROME_ARGS: [&'static str; 79] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -155,6 +155,7 @@ lazy_static! {
             "--disable-crash-reporter",
             "--disable-software-rasterizer",
             "--disable-extensions",
+            "--noerrdialogs",
             "--disable-popup-blocking",
             "--disable-hang-monitor",
             "--disable-checker-imaging",
@@ -169,7 +170,7 @@ lazy_static! {
             "--log-level=3",
             "--enable-logging=stderr",
             "--font-render-hinting=none",
-            // "--block-new-web-contents",
+            "--block-new-web-contents",
             // "--disable-dns-proxy",
             // "--enable-root-ns-dns-proxy",
             "--ip-protection-proxy-opt-out",
@@ -192,7 +193,7 @@ lazy_static! {
             "--disable-vulkan-surface",
             "--disable-webrtc",
             "--disable-blink-features=AutomationControlled",
-            "--disable-ipc-flooding-protection",
+            // "--disable-ipc-flooding-protection",
             // "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
             "--disable-features=PaintHolding,HttpsUpgrades,DeferRendererTasksAfterInput,LensOverlay,ThirdPartyStoragePartitioning,IsolateSandboxedIframes,ProcessPerSiteUpToMainFrameThreshold,site-per-process,WebUIJSErrorReportingExtended,DIPS,InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]
