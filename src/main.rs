@@ -39,6 +39,18 @@ use tokio::{
 use std::time::Duration;
 use tokio::time::{sleep, timeout};
 
+/// Empty default response without a 'webSocketDebuggerUrl'.
+const EMPTY_RESPONSE: Bytes = Bytes::from_static(
+    br#"{
+   "Browser": "",
+   "Protocol-Version": "",
+   "User-Agent": "",
+   "V8-Version": "",
+   "WebKit-Version": "",
+   "webSocketDebuggerUrl": ""
+}"#,
+);
+
 /// Attempt the connection.
 async fn connect_with_retries(address: &str) -> Option<TcpStream> {
     let mut attempts = 0;
@@ -275,18 +287,27 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
             }
         }
         (&Method::GET, "/json/version") => {
-            let body = if CACHEABLE.load(Ordering::Relaxed) {
-                version_handler_bytes(None).await.unwrap_or_default()
-            } else {
-                version_handler_bytes_base(None).await.unwrap_or_default()
-            };
+            let mut attempts = 0;
+            let mut body: Option<Bytes> = None;
 
-            let empty = body.is_empty();
-            let mut resp = Response::new(Full::new(body));
+            while attempts < 10 && body.is_none() {
+                body = if CACHEABLE.load(Ordering::Relaxed) {
+                    version_handler_bytes(None).await
+                } else {
+                    version_handler_bytes_base(None).await
+                };
+                attempts += 1;
+                if body.is_none() {
+                    tokio::time::sleep(Duration::from_millis(25)).await;
+                }
+            }
+
+            let empty = body.is_none();
+            let mut resp = Response::new(Full::new(body.unwrap_or_else(|| EMPTY_RESPONSE)));
 
             resp.headers_mut().insert(
                 hyper::header::CONTENT_TYPE,
-                hyper::header::HeaderValue::from_static("application/json"),
+                hyper::header::HeaderValue::from_static("application/json"), // body has to be json or parse will fail.
             );
 
             if empty {
