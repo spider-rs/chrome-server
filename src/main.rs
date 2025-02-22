@@ -60,7 +60,7 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
             return None;
         }
 
-        sleep(Duration::from_millis(500)).await;
+        sleep(Duration::from_millis(250)).await;
     }
 }
 
