@@ -34,7 +34,7 @@ lazy_static! {
         default_port
     };
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 80] = {
+    pub static ref CHROME_ARGS: [&'static str; 83] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -124,7 +124,9 @@ lazy_static! {
             "--disable-breakpad",
             "--disable-crash-reporter",
             "--disable-software-rasterizer",
+            "--disable-asynchronous-spellchecking",
             "--disable-extensions",
+            "--disable-html5-camera",
             "--noerrdialogs",
             "--disable-popup-blocking",
             "--disable-hang-monitor",
@@ -151,6 +153,7 @@ lazy_static! {
             "--force-color-profile=srgb",
             "--disable-infobars",
             "--mute-audio",
+            "--disable-datasaver-prompt",
             "--no-service-autorun",
             "--password-store=basic",
             "--export-tagged-pdf",
