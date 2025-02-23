@@ -371,10 +371,10 @@ async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
         loop {
             if let Ok((tcp, _)) = listener.accept().await {
-                let io = TokioIo::new(tcp);
                 let builder_options = builder_options.clone();
-
+                
                 tokio::task::spawn(async move {
+                    let io = TokioIo::new(tcp);
                     if let Err(err) = builder_options
                         .serve_connection(io, service_fn(request_handler))
                         .await
