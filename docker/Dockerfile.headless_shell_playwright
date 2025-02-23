@@ -16,7 +16,7 @@ FROM mcr.microsoft.com/playwright:v1.50.1-noble
 
 ARG VERSION=latest
 
-COPY ../build-unpatched.sh .
+COPY ../scripts/build-unpatched.sh .
 COPY ../local.conf /etc/fonts/local.conf
 
 RUN apt-get update && apt-get install -y \

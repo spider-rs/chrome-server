@@ -16,7 +16,6 @@ FROM ubuntu:25.04
 
 ARG VERSION=latest
 
-COPY ../build-unpatched.sh .
 COPY ../local.conf /etc/fonts/local.conf
 
 RUN apt-get update -y
