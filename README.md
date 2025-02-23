@@ -8,19 +8,19 @@ Headless Browser with Proxy and Server.
 
 ## Usage
 
-1. Runs the latest chrome instance with remote proxy connections.
-1. Can spawn and shutdown multiple chrome instances.
-1. Get chrome ws connections and status.
+1. Runs the latest browser instance with remote proxy connections and a server that can rewrite json/version for networking.
+1. Can spawn and shutdown multiple headless instances manually and automatically on errors.
+1. Get CDP ws connections and status (caches values for perf).
 
 The current instance binds chrome to 0.0.0.0 when starting via API.
 
 Use the env variable `REMOTE_ADDRESS` to change the address of the chrome instance between physical or network.
 
-The application will pass alp health checks when using port `6000` to get the status of the chrome container.
+The application will pass lb health checks when using port `6000` to get the status of the chromium container.
 
-A side loaded application is required to run chrome on a load balancer, one of the main purposes of the control panel.
+A side loaded application is required to run chromium on a load balancer, one of the main purposes of the server.
 
-The default port is `9223` for chrome and `9222` for the TCP proxy to connect to the instance due to `0.0.0.0` not being exposed on latest `HeadlessChrome/131.0.6778.139` and up.
+The default port is `9223` for chromium and `9222` for the TCP proxy to connect to the instance due to `0.0.0.0` not being exposed on latest `HeadlessChrome/131.0.6778.139` and up.
 
 ## Building without Docker
 
@@ -96,14 +96,6 @@ You can build this image using the following:
 
 You need to set the env variable passed in as an arg `HOSTNAME_OVERRIDE` to override the docker container and set it to `host.docker.internal`.
 
-#### Docker Image
-
-Get the docker image [spiderrust/chrome](https://hub.docker.com/repository/docker/spiderrust/chrome/general).
-
-### Headless Shell
-
-If you want to use headless-shell you can use the `Dockerfile.headless_shell_playwright` for an ubuntu based install.
-
 #### Manual (WIP)
 
 Use the following to build with docker. 
@@ -117,6 +109,8 @@ The build scripts are originally from [docker-headless-shell](https://github.com
 CHROME_PATH=
 # the remote address of the chrome intance
 REMOTE_ADDRESS=
+# use brave browser as default. Set the value to true.
+BRAVE_ENABLED=
 ```
 
 ## License

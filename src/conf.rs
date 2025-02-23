@@ -1,19 +1,6 @@
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
-/// Get the default chrome bin location per OS.
-fn get_default_chrome_bin() -> &'static str {
-    if cfg!(target_os = "windows") {
-        "chrome.exe"
-    } else if cfg!(target_os = "macos") {
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-    } else if cfg!(target_os = "linux") {
-        "chromium"
-    } else {
-        "chrome"
-    }
-}
-
 lazy_static! {
     /// Is the instance healthy?
     pub static ref IS_HEALTHY: AtomicBool = AtomicBool::new(true);
@@ -88,27 +75,10 @@ lazy_static! {
             _ => "--use-gl=angle"
         };
 
-        let gpu_enabled = match std::env::var("ENABLE_GPU") {
-            Ok(h) => {
-                if h == "true" {
-                   "--enable-gpu"
-                } else {
-                 "--disable-gpu"
-                }
-            }
-            _ =>  "--disable-gpu"
-        };
+        let gpu = std::env::var("ENABLE_GPU").unwrap_or_default() == "true";
 
-        let gpu_enabled_sandboxed = match std::env::var("ENABLE_GPU") {
-            Ok(h) => {
-                if h == "true" {
-                    "--enable-gpu-sandbox"
-                } else {
-                "--disable-gpu-sandbox"
-                }
-            }
-            _ => "--disable-gpu-sandbox"
-        };
+        let gpu_enabled = if gpu { "--enable-gpu" } else { "--disable-gpu" };
+        let gpu_enabled_sandboxed = if gpu { "--enable-gpu-sandbox" } else { "--disable-gpu-sandbox" };
 
         [
             // *SPECIAL*
@@ -272,11 +242,45 @@ lazy_static! {
         CHROME_PATH.ends_with("lightpanda-aarch64-macos")
         || CHROME_PATH.ends_with("lightpanda-x86_64-linux")
     };
-    pub static ref CACHEABLE: AtomicBool = {
+    pub(crate) static ref CACHEABLE: AtomicBool = {
         AtomicBool::new(true)
     };
     /// The last cache date period.
-    pub static ref LAST_CACHE: AtomicU64 = {
+    pub(crate) static ref LAST_CACHE: AtomicU64 = {
         AtomicU64::new(0)
     };
+}
+
+/// Get the default chrome bin location per OS.
+fn get_default_chrome_bin() -> &'static str {
+    let brave = match std::env::var("BRAVE_ENABLED") {
+        Ok(v) => v == "true",
+        _ => false,
+    };
+
+    if cfg!(target_os = "windows") {
+        if brave {
+            "brave-browser.exe"
+        } else {
+            "chrome.exe"
+        }
+    } else if cfg!(target_os = "macos") {
+        if brave {
+            "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+        } else {
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        }
+    } else if cfg!(target_os = "linux") {
+        if brave {
+            "brave-browser"
+        } else {
+            "chromium"
+        }
+    } else {
+        if brave {
+            "brave"
+        } else {
+            "chrome"
+        }
+    }
 }

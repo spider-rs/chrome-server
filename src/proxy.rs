@@ -105,30 +105,28 @@ pub(crate) mod proxy {
             loop {
                 tokio::select! {
                     a = server_stream.read(&mut buf1) => {
-                        let size = match a{
+                        let size = match a {
                             Ok(p) => p,
                             Err(_) => break,
                         };
                         if size == 0 {
                             break;
                         }
-                        match client_stream.write_all(&buf1[..size]).await{
-                            Ok(_) => {},
-                            Err(_) => break,
-                        };
+                        if let Err(_) = client_stream.write_all(&buf1[..size]).await  {
+                            break;
+                        }
                     },
                     b = client_stream.read(&mut buf2) => {
-                        let size = match b{
+                        let size = match b {
                             Ok(p) => p,
                             Err(_) => break,
                         };
                         if size == 0 {
                             break;
                         }
-                        match server_stream.write_all(&buf2[..size]).await{
-                            Ok(_) => {},
-                            Err(_) => break,
-                        };
+                        if let Err(_) = server_stream.write_all(&buf2[..size]).await {
+                            break;
+                        }
                     },
                     else => {
                         break;
