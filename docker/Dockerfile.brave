@@ -7,8 +7,8 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     cargo
 
-COPY src/ ./src
-COPY Cargo.* .
+COPY ../src/ ./src
+COPY ../Cargo.* .
 
 RUN RUST_LOG=error cargo install --no-default-features --path .
 
@@ -16,8 +16,8 @@ FROM ubuntu:25.04
 
 ARG VERSION=latest
 
-COPY ./build-unpatched.sh .
-COPY local.conf /etc/fonts/local.conf
+COPY ../build-unpatched.sh .
+COPY ../local.conf /etc/fonts/local.conf
 
 RUN apt-get update -y
 RUN apt-get install -y apt-utils software-properties-common apt-transport-https
@@ -42,7 +42,7 @@ EXPOSE 9222 6000 9223
 USER root
 
 COPY --from=rustbuilder /root/.cargo/bin/chrome_server /usr/local/bin/chrome_server
-COPY ./docker-entrypoint.sh /
+COPY ../docker-entrypoint.sh /
 
 RUN chmod +x /docker-entrypoint.sh
 

@@ -286,6 +286,7 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
                 Ok(message)
             }
         }
+        // we only care about the main /json/version for 9223 for the proxy forwarder.
         (&Method::GET, "/json/version") => {
             let mut attempts = 0;
             let mut body: Option<Bytes> = None;

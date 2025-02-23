@@ -76,8 +76,8 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     cargo
 
-COPY src/ ./src
-COPY Cargo.* .
+COPY ../src/ ./src
+COPY ../Cargo.* .
 
 RUN RUST_LOG=error cargo install --no-default-features --path .
 
@@ -101,9 +101,9 @@ EXPOSE 9222 6000 9223
 # USER root
 
 COPY --from=rustbuilder /root/.cargo/bin/chrome_server /usr/local/bin/chrome_server
-COPY ./docker-entrypoint.sh /
 COPY --from=pandabuilder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=pandabuilder /browser/zig-out/bin/lightpanda /bin/lightpanda
+COPY ../docker-entrypoint.sh /
 
 RUN chmod +x /docker-entrypoint.sh
 

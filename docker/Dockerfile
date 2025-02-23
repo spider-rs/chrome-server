@@ -5,19 +5,24 @@ WORKDIR /app
 RUN apk upgrade --update-cache --available && \
     apk add --no-cache gcc make g++ cmake musl-dev perl libressl-dev
 
-
-COPY src/ ./src
-COPY Cargo.* .
+COPY ../src/ ./src
+COPY ../Cargo.* .
 
 RUN RUST_LOG=error cargo install --no-default-features --path .
 
 FROM alpine:3.21
 
-ARG VERSION=latest
+# Installs latest Chromium package.
+RUN apk upgrade --no-cache --available \
+    && apk add --no-cache \
+      chromium-swiftshader \
+      ttf-freefont \
+      font-noto-emoji \
+    && apk add --no-cache \
+      --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
+      font-wqy-zenhei
 
-COPY out/$VERSION/headless-shell/ /headless-shell/
-
-COPY local.conf /etc/fonts/local.conf
+COPY ../local.conf /etc/fonts/local.conf
 
 # Add Chrome as a user
 RUN mkdir -p /usr/src/app \
@@ -28,17 +33,17 @@ USER chrome
 WORKDIR /usr/src/app
 
 ENV CHROME_BIN=/usr/bin/chromium-browser \
-    CHROME_PATH=/headless-shell:$PATH
+    CHROME_PATH=/usr/lib/chromium/
 
-EXPOSE 9222 6000 9223
+EXPOSE 9222 6000
 
 USER root
 
 COPY --from=rustbuilder /usr/local/cargo/bin/chrome_server /usr/local/bin/chrome_server
-COPY ./docker-entrypoint.sh /
+COPY ../docker-entrypoint.sh /
 
 RUN apk add --no-cache tini curl sudo nss dbus freetype harfbuzz ca-certificates libxcomposite libxrandr \
-    libxdamage libxext libxshmfence mesa-gl udev gcompat at-spi2-core gpm xkeyboard-config libxkbcommon libxrandr alsa-lib
+    libxdamage libxext libxshmfence mesa-gl udev
 
 RUN chmod +x /docker-entrypoint.sh
 
@@ -49,6 +54,5 @@ ENV LAUNCH=init
 ENV DEFAULT_PORT=9223
 ENV DEFAULT_PORT_SERVER=6000
 # ENV HOSTNAME_OVERRIDE=127.0.0.1
-ENV DEFAULT_LAUNCH_NAME=/headless-shell/headless-shell
 
 ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]
