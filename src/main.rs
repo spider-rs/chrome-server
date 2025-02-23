@@ -14,9 +14,9 @@ mod modify;
 mod proxy;
 
 use conf::{
-    CACHEABLE, CHROME_ADDRESS, CHROME_ARGS, CHROME_INSTANCES, CHROME_PATH, DEFAULT_PORT,
-    DEFAULT_PORT_SERVER, ENDPOINT, HOST_NAME, IS_HEALTHY, LAST_CACHE, LIGHTPANDA_ARGS, LIGHT_PANDA,
-    TARGET_REPLACEMENT,
+    CACHEABLE, CHROME_ADDRESS, CHROME_ARGS, CHROME_INSTANCES, CHROME_PATH, DEBUG_JSON,
+    DEFAULT_PORT, DEFAULT_PORT_SERVER, ENDPOINT, HOST_NAME, IS_HEALTHY, LAST_CACHE,
+    LIGHTPANDA_ARGS, LIGHT_PANDA, TARGET_REPLACEMENT,
 };
 
 use core::sync::atomic::Ordering;
@@ -304,7 +304,13 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
             }
 
             let empty = body.is_none();
-            let mut resp = Response::new(Full::new(body.unwrap_or_else(|| EMPTY_RESPONSE)));
+            let body = body.unwrap_or_else(|| EMPTY_RESPONSE);
+
+            if *DEBUG_JSON {
+                tracing::info!("{:?}", body);
+            }
+
+            let mut resp = Response::new(Full::new(body));
 
             resp.headers_mut().insert(
                 hyper::header::CONTENT_TYPE,

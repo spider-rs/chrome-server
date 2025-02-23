@@ -249,6 +249,8 @@ lazy_static! {
     pub(crate) static ref LAST_CACHE: AtomicU64 = {
         AtomicU64::new(0)
     };
+    /// Debug the json version endpoint.
+    pub(crate) static ref DEBUG_JSON: bool = std::env::var("DEBUG_JSON").unwrap_or_default() == "true";
 }
 
 /// Get the default chrome bin location per OS.
