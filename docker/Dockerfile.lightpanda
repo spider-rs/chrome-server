@@ -76,10 +76,11 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     cargo
 
-COPY ../src/ ./src
+COPY ../headless_browser/ ./headless_browser
+COPY ../headless_browser_lib/ ./headless_browser_lib
 COPY ../Cargo.* .
 
-RUN RUST_LOG=error cargo install --no-default-features --path .
+RUN RUST_LOG=error cargo install --no-default-features --path headless_browser
 
 FROM ubuntu:22.04
 
@@ -100,7 +101,7 @@ EXPOSE 9222 6000 9223
 
 # USER root
 
-COPY --from=rustbuilder /root/.cargo/bin/chrome_server /usr/local/bin/chrome_server
+COPY --from=rustbuilder /root/.cargo/bin/headless_browser /usr/local/bin/headless_browser
 COPY --from=pandabuilder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=pandabuilder /browser/zig-out/bin/lightpanda /bin/lightpanda
 COPY ../docker-entrypoint.sh /

@@ -5,10 +5,11 @@ WORKDIR /app
 RUN apk upgrade --update-cache --available && \
     apk add --no-cache gcc make g++ cmake musl-dev perl libressl-dev
 
-COPY ../src/ ./src
+COPY ../headless_browser/ ./headless_browser
+COPY ../headless_browser_lib/ ./headless_browser_lib
 COPY ../Cargo.* .
 
-RUN RUST_LOG=error cargo install --no-default-features --path .
+RUN RUST_LOG=error cargo install --no-default-features --path headless_browser
 
 FROM alpine:3.21
 
@@ -39,7 +40,7 @@ EXPOSE 9222 6000
 
 USER root
 
-COPY --from=rustbuilder /usr/local/cargo/bin/chrome_server /usr/local/bin/chrome_server
+COPY --from=rustbuilder /usr/local/cargo/bin/headless_browser /usr/local/bin/headless_browser
 COPY ../docker-entrypoint.sh /
 
 RUN apk add --no-cache tini curl sudo nss dbus freetype harfbuzz ca-certificates libxcomposite libxrandr \

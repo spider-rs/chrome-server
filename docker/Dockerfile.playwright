@@ -5,10 +5,11 @@ WORKDIR /app
 RUN apk upgrade --update-cache --available && \
     apk add gcc cmake make g++
 
-COPY ../src/ ./src
+COPY ../headless_browser/ ./headless_browser
+COPY ../headless_browser_lib/ ./headless_browser_lib
 COPY ../Cargo.* .
 
-RUN RUST_LOG=error cargo install --no-default-features --path .
+RUN RUST_LOG=error cargo install --no-default-features --path headless_browser
 
 FROM alpine:3.21
 
@@ -47,7 +48,7 @@ RUN apk add --no-cache tini curl sudo nodejs npm yarn \
 #     && npm install -g playwright \
 #     && npx playwright install chromium
 
-COPY --from=rustbuilder /usr/local/cargo/bin/chrome_server /usr/local/bin/chrome_server
+COPY --from=rustbuilder /usr/local/cargo/bin/headless_browser /usr/local/bin/headless_browser
 
 RUN PLAYWRIGHT_CHROMIUM_PATH=$(find /root/.cache/ms-playwright | grep "chrome-linux/chrome$") && \
     cp $PLAYWRIGHT_CHROMIUM_PATH /chromium_path

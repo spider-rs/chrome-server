@@ -1,0 +1,24 @@
+[package]
+name = "headless_browser_lib"
+version = "0.1.2"
+edition = "2021"
+authors = [
+    "j-mendez <jeff@spider.cloud>"
+]
+description = "Chrome proxy API to manage chrome in Cloud Providers lib"
+license = "MIT"
+repository = "https://github.com/spider-rs/headless-browser"
+documentation = "https://docs.rs/headless_browser_lib"
+categories = ["web-programming", "command-line-utilities"]
+keywords = ["chrome", "proxy"]
+
+[dependencies]
+hyper = { version = "1", features = ["client", "http1", "server"] }
+tokio = { version = "1", features = ["rt-multi-thread", "signal", "macros", "net", "io-util"] }
+http-body-util = "0.1"
+hyper-util = { version = "0.1", features = ["tokio"] }
+lazy_static = "1"
+openssl = { version = "0.10", features = ["vendored"] }
+openssl-sys = { version = "0.9", features = ["vendored"] }
+cached = { version = "0", features = ["async_tokio_rt_multi_thread"]}
+tracing = "0.1"

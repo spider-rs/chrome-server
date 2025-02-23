@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
-lazy_static! {
+lazy_static::lazy_static! {
     /// Is the instance healthy?
     pub static ref IS_HEALTHY: AtomicBool = AtomicBool::new(true);
     pub static ref CHROME_INSTANCES: tokio::sync::Mutex<HashSet<u32>> = tokio::sync::Mutex::new(HashSet::new());
@@ -221,17 +221,21 @@ lazy_static! {
 
         hostname
     };
+    /// The main endpoint for entry.
     pub(crate) static ref ENDPOINT_BASE: String = {
         format!("http://127.0.0.1:{}", *DEFAULT_PORT)
     };
+    /// The main endpoint json/version.
     pub(crate) static ref ENDPOINT: String = {
         format!("http://127.0.0.1:{}/json/version", *DEFAULT_PORT)
     };
+    /// The chrome launch path.
     pub(crate) static ref CHROME_PATH: String = {
         std::env::args().nth(1).unwrap_or_else(|| {
             std::env::var("CHROME_PATH").unwrap_or_else(|_| get_default_chrome_bin().to_string())
         })
     };
+    /// The chrome address.
     pub(crate) static ref CHROME_ADDRESS: String = {
         let mut host_address = std::env::args().nth(2).unwrap_or("127.0.0.1".to_string()).to_string();
 

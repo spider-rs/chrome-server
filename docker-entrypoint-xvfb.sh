@@ -6,10 +6,11 @@ REMOTE_ADDRESS="${REMOTE_ADDRESS:-127.0.0.1}";
 LAUNCH="${LAUNCH:-init}";
 DEFAULT_PORT="${DEFAULT_PORT:-9224}";
 DEFAULT_PORT_SERVER="${DEFAULT_PORT_SERVER:-6000}";
+DEFAULT_LAUNCH_NAME="${DEFAULT_LAUNCH_NAME:-chromium-browser}";
 
 echo "Starting Xvfb"
 
 Xvfb :0 -screen 0 1024x768x16 -nolisten tcp &
 sleep 1
 
-exec chrome_server chromium-browser $REMOTE_ADDRESS $LAUNCH $DEFAULT_PORT $DEFAULT_PORT_SERVER "false"
+exec headless_browser $DEFAULT_LAUNCH_NAME $REMOTE_ADDRESS $LAUNCH $DEFAULT_PORT $DEFAULT_PORT_SERVER "false"

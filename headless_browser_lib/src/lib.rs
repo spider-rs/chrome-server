@@ -1,12 +1,3 @@
-#[cfg(all(not(target_env = "msvc"), feature = "jemalloc"))]
-use tikv_jemallocator::Jemalloc;
-
-#[cfg(all(not(target_env = "msvc"), feature = "jemalloc"))]
-#[global_allocator]
-static GLOBAL: Jemalloc = Jemalloc;
-
-#[macro_use]
-extern crate lazy_static;
 use cached::proc_macro::once;
 
 mod conf;
@@ -76,22 +67,22 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
     }
 }
 
-/// Shutdown the chrome instance by process id
+/// Shutdown the chrome instance by process id.
 #[cfg(target_os = "windows")]
-fn shutdown(pid: &u32) {
+pub fn shutdown(pid: &u32) {
     let _ = Command::new("taskkill")
         .args(["/PID", &pid.to_string(), "/F"])
         .spawn();
 }
 
-/// Shutdown the chrome instance by process id
+/// Shutdown the chrome instance by process id.
 #[cfg(not(target_os = "windows"))]
-fn shutdown(pid: &u32) {
+pub fn shutdown(pid: &u32) {
     let _ = Command::new("kill").args(["-9", &pid.to_string()]).spawn();
 }
 
-/// Fork a chrome process
-async fn fork(port: Option<u32>) -> String {
+/// Fork a chrome process.
+pub async fn fork(port: Option<u32>) -> String {
     let id = if !*LIGHT_PANDA {
         let mut command = Command::new(&*CHROME_PATH);
         let mut chrome_args = CHROME_ARGS.map(|e| e.to_string());
@@ -148,7 +139,7 @@ async fn fork(port: Option<u32>) -> String {
     id.to_string()
 }
 
-/// Get json endpoint for chrome instance proxying
+/// Get json endpoint for chrome instance proxying.
 async fn version_handler_bytes_base(endpoint_path: Option<&str>) -> Option<Bytes> {
     use http_body_util::BodyExt;
 
@@ -220,7 +211,7 @@ async fn version_handler_bytes_base(endpoint_path: Option<&str>) -> Option<Bytes
     resp
 }
 
-/// Get json endpoint for chrome instance proxying
+/// Get json endpoint for chrome instance proxying.
 #[once(option = true, sync_writes = true, time = 10)]
 async fn version_handler_bytes(endpoint_path: Option<&str>) -> Option<Bytes> {
     version_handler_bytes_base(endpoint_path).await
@@ -238,7 +229,7 @@ async fn health_check_handler() -> Result<Response<Full<Bytes>>, Infallible> {
     }
 }
 
-/// Fork handler
+/// Fork handler.
 async fn fork_handler(port: Option<u32>) -> Result<Response<Full<Bytes>>, Infallible> {
     let pid = fork(port).await;
     let pid = format!("Forked process with pid: {}", pid);
@@ -246,6 +237,7 @@ async fn fork_handler(port: Option<u32>) -> Result<Response<Full<Bytes>>, Infall
     Ok(Response::new(Full::new(Bytes::from(pid))))
 }
 
+/// Shutdown all the chrome instances launched.
 pub async fn shutdown_instances() {
     let mut mutx = CHROME_INSTANCES.lock().await;
 
@@ -256,7 +248,7 @@ pub async fn shutdown_instances() {
     mutx.clear();
 }
 
-/// Shutdown handler
+/// Shutdown handler.
 async fn shutdown_handler() -> Result<Response<Full<Bytes>>, Infallible> {
     shutdown_instances().await;
 
@@ -265,7 +257,7 @@ async fn shutdown_handler() -> Result<Response<Full<Bytes>>, Infallible> {
     ))))
 }
 
-/// Request handler
+/// Request handler.
 async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>, Infallible> {
     match (req.method(), req.uri().path()) {
         (&Method::GET, "/health") => health_check_handler().await,
@@ -297,8 +289,8 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
                 } else {
                     version_handler_bytes_base(None).await
                 };
-                attempts += 1;
                 if body.is_none() {
+                    attempts += 1;
                     tokio::time::sleep(Duration::from_millis(25)).await;
                 }
             }
@@ -334,10 +326,8 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
     }
 }
 
-/// Main entry for the proxy.
-async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    tracing_subscriber::fmt::init();
-
+/// Launch chrome, start the server, and proxy for management.
+pub async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let auto_start = std::env::args().nth(3).unwrap_or_else(|| {
         let auto = std::env::var("CHROME_INIT").unwrap_or("true".into());
         if auto == "true" {
@@ -372,7 +362,7 @@ async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         loop {
             if let Ok((tcp, _)) = listener.accept().await {
                 let builder_options = builder_options.clone();
-                
+
                 tokio::task::spawn(async move {
                     let io = TokioIo::new(tcp);
                     if let Err(err) = builder_options
@@ -401,9 +391,4 @@ async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         _ = crate::proxy::proxy::run_proxy() =>  Ok(()),
         _ = signal::ctrl_c() => Ok(()),
     }
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    run_main().await
 }

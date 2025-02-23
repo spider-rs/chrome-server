@@ -1,32 +1,6 @@
-[package]
-name = "chrome_server"
-version = "0.2.33"
-edition = "2021"
-authors = [
-    "j-mendez <jeff@spider.cloud>"
+[workspace]
+members = [
+    "headless_browser",
+    "headless_browser_lib",
 ]
-description = "Chrome proxy API to manage chrome in Cloud Providers"
-license = "MIT"
-repository = "https://github.com/spider-rs/chrome-server"
-documentation = "https://docs.rs/chrome_server"
-categories = ["web-programming", "command-line-utilities"]
-keywords = ["chrome", "proxy"]
-
-[dependencies]
-hyper = { version = "1", features = ["client", "http1", "server"] }
-tokio = { version = "1", features = ["rt-multi-thread", "signal", "macros", "net", "io-util"] }
-http-body-util = "0.1"
-hyper-util = { version = "0.1", features = ["tokio"] }
-lazy_static = "1"
-openssl = { version = "0.10", features = ["vendored"] }
-openssl-sys = { version = "0.9", features = ["vendored"] }
-cached = { version = "0", features = ["async_tokio_rt_multi_thread"]}
-tracing = "0.1"
-tracing-subscriber = "0.3"
-
-[target.'cfg(not(target_env = "msvc"))'.dependencies]
-tikv-jemallocator = { version = "0.6", features = ["background_threads", "background_threads_runtime_support"], optional = true }
-
-[features]
-default = ["jemalloc"]
-jemalloc = ["dep:tikv-jemallocator"]
+resolver = "2"

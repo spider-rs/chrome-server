@@ -41,6 +41,7 @@ pub(crate) mod proxy {
         net::{TcpListener, TcpStream},
     };
 
+    /// Run the proxy forwarder for chrome. This allows connecting to chrome outside of the network.
     pub async fn run_proxy() -> std::io::Result<()> {
         let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
         println!("Proxy Listening on {}", *crate::proxy::ENTRY);
