@@ -34,7 +34,7 @@ lazy_static! {
         default_port
     };
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 79] = {
+    pub static ref CHROME_ARGS: [&'static str; 80] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -163,7 +163,7 @@ lazy_static! {
             "--disable-vulkan-surface",
             "--disable-webrtc",
             "--disable-blink-features=AutomationControlled",
-            // "--disable-ipc-flooding-protection",
+            "--disable-ipc-flooding-protection", // we do not need to throttle navigation for https://github.com/spider-rs/spider/commit/9ff5bbd7a2656b8edb84b62843b72ae9d09af079#diff-75ce697faf0d37c3dff4a3a19e7524798b3cb5487f8f54beb5d04c4d48e34234R446.
             // "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
             "--disable-features=PaintHolding,HttpsUpgrades,DeferRendererTasksAfterInput,LensOverlay,ThirdPartyStoragePartitioning,IsolateSandboxedIframes,ProcessPerSiteUpToMainFrameThreshold,site-per-process,WebUIJSErrorReportingExtended,DIPS,InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]
