@@ -120,7 +120,7 @@ headless_browser_lib = "0.1"
 
 ```rust
 /// spider_chrome is mapped to chromiumoxide since it was forked and kept the API the same.
-use chromiumoxide::browser::Browser;
+use chromiumoxide::{browser::Browser, error::CdpError};
 use futures_util::stream::StreamExt;
 
 #[tokio::main]
@@ -141,13 +141,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    let page = browser.new_page("https://spider.cloud").await?;
-    let html = page.wait_for_navigation().await?.content().await?;
+    let navigate_page = async |u: &str| -> Result<String, CdpError> {
+        let page = browser.new_page(u).await?;
+        let html = page.wait_for_navigation().await?.content().await?;
+        Ok::<String, CdpError>(html)
+    };
+
+    let (spider_html, example_html) = tokio::join!(
+        navigate_page("https://spider.cloud"),
+        navigate_page("https://example.com")
+    );
 
     browser.close().await?;
     let _ = handle.await;
 
-    println!("==={}===", html);
+    let spider_html = spider_html?;
+    let example_html = example_html?;
+
+    browser.close().await?;
+    let _ = handle.await;
+
+    println!("===\n{}\n{}\n===", "spider.cloud", spider_html);
+    println!("===\n{}\n{}\n===", "example.com", example_html);
 
     Ok(())
 }
