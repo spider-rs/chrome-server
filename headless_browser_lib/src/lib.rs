@@ -99,9 +99,7 @@ pub async fn fork(port: Option<u32>) -> String {
 
         let id = if let Ok(child) = cmd.spawn() {
             let cid = child.id();
-
             tracing::info!("Chrome PID: {}", cid);
-
             cid
         } else {
             tracing::error!("chrome command didn't start");
@@ -329,8 +327,7 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
 /// Launch chrome, start the server, and proxy for management.
 pub async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let auto_start = std::env::args().nth(3).unwrap_or_else(|| {
-        let auto = std::env::var("CHROME_INIT").unwrap_or("true".into());
-        if auto == "true" {
+        if std::env::var("CHROME_INIT").unwrap_or("true".into()) == "true" {
             "init".into()
         } else {
             "ignore".into()

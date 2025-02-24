@@ -4,6 +4,8 @@ Headless Browser with Proxy and Server.
 
 ## Installation
 
+Make sure to have Rust installed.
+
 `cargo install headless_browser`
 
 ## Usage
@@ -115,7 +117,49 @@ BRAVE_ENABLED=
 
 ## Library
 
-You can use the [lib](https://docs.rs/headless_browser_lib/latest/headless_browser_lib/) with `cargo add headless_browser_lib` control the startup and shutdown manually.
+You can use the [lib](https://docs.rs/headless_browser_lib/latest/headless_browser_lib/) with `cargo add headless_browser_lib` control the startup and shutdown manually. Below is an example of using the [spider_chrome](https://github.com/spider-rs/headless-browser) project to run CDP commands concurrently fast.
+
+```rust
+futures-util = "0.3"
+spider_chrome = "2"
+headless_browser_lib = "0.1"
+tokio = { version = "1", features = ["rt-multi-thread", "signal", "macros", "net", "io-util"] }
+```
+
+```rust
+/// spider_chrome is mapped to chromiumoxide since it was forked and kept the API the same.
+use chromiumoxide::browser::Browser;
+use futures_util::stream::StreamExt;
+
+#[tokio::test]
+async fn basic() -> Result<(), Box<dyn std::error::Error>> {
+    tokio::spawn(headless_browser_lib::run_main()); // spawn main server, proxy, and headless.
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await; // give a slight delay for now until we use a oneshot.
+
+    let (browser, mut handler) =
+         // port 6000 - main server entry for routing correctly across networks.
+        Browser::connect_with_config("http://127.0.0.1:6000/json/version", Default::default())
+            .await?;
+
+    let handle = tokio::task::spawn(async move {
+        while let Some(h) = handler.next().await {
+            if h.is_err() {
+                break;
+            }
+        }
+    });
+
+    let page = browser.new_page("https://spider.cloud").await?;
+    let html = page.wait_for_navigation().await?.content().await?;
+
+    browser.close().await?;
+    let _ = handle.await;
+
+    println!("==={}===", html);
+
+    Ok(())
+}
+```
 
 ## License
 

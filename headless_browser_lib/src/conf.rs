@@ -231,9 +231,20 @@ lazy_static::lazy_static! {
     };
     /// The chrome launch path.
     pub(crate) static ref CHROME_PATH: String = {
-        std::env::args().nth(1).unwrap_or_else(|| {
-            std::env::var("CHROME_PATH").unwrap_or_else(|_| get_default_chrome_bin().to_string())
-        })
+        let default_path = std::env::args().nth(1).unwrap_or_default();
+        
+        // handle testing and default to OS
+        if default_path.is_empty() || default_path.trim() == "--nocapture" {
+            let chrome_path = std::env::var("CHROME_PATH").unwrap_or_default();
+
+            if chrome_path.is_empty() {
+                get_default_chrome_bin().to_string()
+            } else {
+                chrome_path
+            }
+        } else {
+            default_path
+        }
     };
     /// The chrome address.
     pub(crate) static ref CHROME_ADDRESS: String = {

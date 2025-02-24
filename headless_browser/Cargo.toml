@@ -21,6 +21,12 @@ tracing-subscriber = "0.3"
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 tikv-jemallocator = { version = "0.6", features = ["background_threads", "background_threads_runtime_support"], optional = true }
 
+
+[dev-dependencies]
+futures-util = "0.3"
+spider_chrome = "2"
+tokio = { version = "1", features = ["rt-multi-thread", "signal", "macros", "net", "io-util"] }
+
 [features]
 default = ["jemalloc"]
 jemalloc = ["dep:tikv-jemallocator"]
