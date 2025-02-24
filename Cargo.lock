@@ -340,7 +340,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33d852cb9b869c2a9b3df2f71a3074817f01e1844f839a144f5fcef059a4eb5d"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -573,7 +573,7 @@ dependencies = [
 
 [[package]]
 name = "headless_browser"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "futures-util",
  "headless_browser_lib",
@@ -586,7 +586,7 @@ dependencies = [
 
 [[package]]
 name = "headless_browser_lib"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "cached",
  "http-body-util",
@@ -1487,7 +1487,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1895,7 +1895,7 @@ dependencies = [
  "getrandom 0.3.1",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
