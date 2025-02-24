@@ -4,7 +4,7 @@ Headless Browser with Proxy and Server.
 
 ## Installation
 
-Make sure to have Rust installed.
+Make sure to have [Rust](https://www.rust-lang.org/learn/get-started) installed.
 
 `cargo install headless_browser`
 
