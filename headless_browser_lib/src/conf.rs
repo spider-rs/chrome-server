@@ -246,7 +246,7 @@ lazy_static::lazy_static! {
     /// The chrome launch path.
     pub(crate) static ref CHROME_PATH: String = {
         let default_path = std::env::args().nth(1).unwrap_or_default();
-        
+
         // handle testing and default to OS
         if default_path.is_empty() || default_path.trim() == "--nocapture" {
             let chrome_path = std::env::var("CHROME_PATH").unwrap_or_default();

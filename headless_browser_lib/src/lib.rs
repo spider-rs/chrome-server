@@ -50,8 +50,14 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
         match timeout(Duration::from_secs(7), TcpStream::connect(address)).await {
             Ok(Ok(stream)) => return Some(stream),
             Ok(Err(e)) => {
-                attempts += 1;
-                tracing::warn!("Failed to connect: {}. Attempt {} of 20", e, attempts);
+                // connection refused means the instance is not alive.
+                if !e.kind().eq(&std::io::ErrorKind::ConnectionRefused) {
+                    attempts += 1;
+                    tracing::warn!("Failed to connect: {}. Attempt {} of 20", e, attempts);
+                } else {
+                    tracing::error!("Connection refused. Attempt {} of 20", attempts);
+                    return None;
+                }
             }
             Err(_) => {
                 attempts += 1;
@@ -235,6 +241,56 @@ async fn fork_handler(port: Option<u32>) -> Result<Response<Full<Bytes>>, Infall
     Ok(Response::new(Full::new(Bytes::from(pid))))
 }
 
+/// Json version handler.
+async fn json_version_handler(
+    endpoint_path: Option<&str>,
+) -> Result<Response<Full<Bytes>>, Infallible> {
+    let mut attempts = 0;
+    let mut body: Option<Bytes> = None;
+    let mut checked_empty = false;
+
+    while attempts < 10 && body.is_none() {
+        body = if CACHEABLE.load(Ordering::Relaxed) {
+            version_handler_bytes(endpoint_path).await
+        } else {
+            version_handler_bytes_base(endpoint_path).await
+        };
+
+        if body.is_none() {
+            // check the first instance.
+            if !checked_empty{
+                checked_empty = true;
+                if CHROME_INSTANCES.lock().await.is_empty()  {
+                    break;
+                }
+            }
+            
+            attempts += 1;
+            tokio::time::sleep(Duration::from_millis(25)).await;
+        }
+    }
+
+    let empty = body.is_none();
+    let body = body.unwrap_or_else(|| EMPTY_RESPONSE);
+
+    if *DEBUG_JSON {
+        tracing::info!("{:?}", body);
+    }
+
+    let mut resp = Response::new(Full::new(body));
+
+    resp.headers_mut().insert(
+        hyper::header::CONTENT_TYPE,
+        hyper::header::HeaderValue::from_static("application/json"), // body has to be json or parse will fail.
+    );
+
+    if empty {
+        *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
+    }
+
+    Ok(resp)
+}
+
 /// Shutdown all the chrome instances launched.
 pub async fn shutdown_instances() {
     let mut mutx = CHROME_INSTANCES.lock().await;
@@ -244,6 +300,8 @@ pub async fn shutdown_instances() {
     }
 
     mutx.clear();
+    // clear the cache storing /json/version.
+    CACHEABLE.store(false, std::sync::atomic::Ordering::Relaxed);
 }
 
 /// Shutdown handler.
@@ -260,7 +318,9 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
     match (req.method(), req.uri().path()) {
         (&Method::GET, "/health") => health_check_handler().await,
         (&Method::GET, "/") => health_check_handler().await,
+        (&Method::GET, "/json/version") => json_version_handler(None).await,
         (&Method::POST, "/fork") => fork_handler(None).await,
+        (&Method::POST, "/shutdown") => shutdown_handler().await,
         (&Method::POST, path) if path.starts_with("/fork/") => {
             if let Some(port) = path.split('/').nth(2) {
                 if let Ok(port) = port.parse::<u32>() {
@@ -276,44 +336,6 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
                 Ok(message)
             }
         }
-        // we only care about the main /json/version for 9223 for the proxy forwarder.
-        (&Method::GET, "/json/version") => {
-            let mut attempts = 0;
-            let mut body: Option<Bytes> = None;
-
-            while attempts < 10 && body.is_none() {
-                body = if CACHEABLE.load(Ordering::Relaxed) {
-                    version_handler_bytes(None).await
-                } else {
-                    version_handler_bytes_base(None).await
-                };
-                if body.is_none() {
-                    attempts += 1;
-                    tokio::time::sleep(Duration::from_millis(25)).await;
-                }
-            }
-
-            let empty = body.is_none();
-            let body = body.unwrap_or_else(|| EMPTY_RESPONSE);
-
-            if *DEBUG_JSON {
-                tracing::info!("{:?}", body);
-            }
-
-            let mut resp = Response::new(Full::new(body));
-
-            resp.headers_mut().insert(
-                hyper::header::CONTENT_TYPE,
-                hyper::header::HeaderValue::from_static("application/json"), // body has to be json or parse will fail.
-            );
-
-            if empty {
-                *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
-            }
-
-            Ok(resp)
-        }
-        (&Method::POST, "/shutdown") => shutdown_handler().await,
         _ => {
             let mut resp = Response::new(Full::new(Bytes::from("Not Found")));
 
@@ -343,7 +365,7 @@ pub async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> 
         *DEFAULT_PORT_SERVER,
     );
 
-    let listener = TcpListener::bind(addr).await.expect("connection");
+    let listener = TcpListener::bind(addr).await.expect("addres allready in use. make sure to clear the env DEFAULT_PORT_SERVER");
 
     let make_svc = async move {
         let builder_options = std::sync::Arc::new(
