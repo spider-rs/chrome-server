@@ -45,18 +45,24 @@ const EMPTY_RESPONSE: Bytes = Bytes::from_static(
 /// Attempt the connection.
 async fn connect_with_retries(address: &str) -> Option<TcpStream> {
     let mut attempts = 0;
+    let mut connection_failed = false;
 
     loop {
         match timeout(Duration::from_secs(7), TcpStream::connect(address)).await {
             Ok(Ok(stream)) => return Some(stream),
             Ok(Err(e)) => {
+                attempts += 1;
                 // connection refused means the instance is not alive.
                 if !e.kind().eq(&std::io::ErrorKind::ConnectionRefused) {
-                    attempts += 1;
                     tracing::warn!("Failed to connect: {}. Attempt {} of 20", e, attempts);
                 } else {
-                    tracing::error!("Connection refused. Attempt {} of 20", attempts);
-                    return None;
+                    if !connection_failed {
+                        connection_failed = true;
+                    }
+                    if attempts >= 7 {
+                        tracing::warn!("ConnectionRefused: {}. Attempt {} of 20", e, attempts);
+                        return None;
+                    }
                 }
             }
             Err(_) => {
@@ -69,7 +75,12 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
             return None;
         }
 
-        sleep(Duration::from_millis(250)).await;
+        sleep(Duration::from_millis(if connection_failed {
+            100
+        } else {
+            250
+        }))
+        .await;
     }
 }
 
