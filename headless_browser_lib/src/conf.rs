@@ -33,8 +33,18 @@ lazy_static::lazy_static! {
 
         default_port
     };
+    /// Is a brave instance?
+    pub(crate) static ref BRAVE_INSTANCE: bool = {
+        CHROME_PATH.ends_with("Brave Browser")
+        || CHROME_PATH.ends_with("brave-browser")
+    };
+    /// Is a lightpanda instance?
+    pub(crate) static ref LIGHT_PANDA: bool = {
+        CHROME_PATH.ends_with("lightpanda-aarch64-macos")
+        || CHROME_PATH.ends_with("lightpanda-x86_64-linux")
+    };
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 83] = {
+    pub static ref CHROME_ARGS: [&'static str; 86] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -107,6 +117,8 @@ lazy_static::lazy_static! {
             "--disable-site-isolation-trials",
             "--disable-web-security",
             "--disable-threaded-animation",
+            // fast forward time on non headless-shell. Confirmed working for chromium builds.
+            if *BRAVE_INSTANCE { "--virtual-time-budget=60000" } else { "" },
             "--disable-sync",
             "--disable-print-preview",
             "--disable-search-engine-choice-screen",
@@ -119,6 +131,8 @@ lazy_static::lazy_static! {
             "--disable-default-apps",
             "--disable-prompt-on-repost",
             "--disable-domain-reliability",
+            "--enable-dom-distiller",
+            "--enable-distillability-service",
             "--disable-component-update",
             "--disable-background-timer-throttling",
             "--disable-breakpad",
@@ -255,10 +269,6 @@ lazy_static::lazy_static! {
         }
 
         host_address
-    };
-    pub(crate) static ref LIGHT_PANDA: bool = {
-        CHROME_PATH.ends_with("lightpanda-aarch64-macos")
-        || CHROME_PATH.ends_with("lightpanda-x86_64-linux")
     };
     pub(crate) static ref CACHEABLE: AtomicBool = {
         AtomicBool::new(true)

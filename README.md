@@ -24,6 +24,8 @@ A side loaded application is required to run chromium on a load balancer, one of
 
 The default port is `9223` for chromium and `9222` for the TCP proxy to connect to the instance due to `0.0.0.0` not being exposed on latest `HeadlessChrome/131.0.6778.139` and up.
 
+It is recommended to use the `headless_shell_playwright` docker build or [chrome-headless-shell](https://storage.googleapis.com/chrome-for-testing-public/134.0.6998.23/linux64/chrome-headless-shell-linux64.zip) for web scraping (headless-shell is x10 times faster than headless = new).
+
 ## API
 
 1. POST: `fork` to start a new chrome instance or use `fork/$port` with the port to startup the instance ex: `curl --location --request POST 'http://localhost:6000/fork/9223'`.
