@@ -24,14 +24,6 @@ A side loaded application is required to run chromium on a load balancer, one of
 
 The default port is `9223` for chromium and `9222` for the TCP proxy to connect to the instance due to `0.0.0.0` not being exposed on latest `HeadlessChrome/131.0.6778.139` and up.
 
-## Building without Docker
-
-In order to build without docker set the `BUILD_CHROME` env var to true.
-
-## Mac
-
-If your running locally use the following to start the args with the first param `headless_browser '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'`
-
 ## API
 
 1. POST: `fork` to start a new chrome instance or use `fork/$port` with the port to startup the instance ex: `curl --location --request POST 'http://localhost:6000/fork/9223'`.
@@ -100,7 +92,7 @@ You need to set the env variable passed in as an arg `HOSTNAME_OVERRIDE` to over
 
 #### Manual (WIP)
 
-Use the following to build with docker. 
+Use the following to build with docker.
 Run the command `./build.sh` to build chrome on the machine with docker.
 The build scripts are originally from [docker-headless-shell](https://github.com/chromedp/docker-headless-shell).
 
@@ -121,9 +113,9 @@ You can use the [lib](https://docs.rs/headless_browser_lib/latest/headless_brows
 
 ```rust
 futures-util = "0.3"
+tokio = { version = "1", features = ["full"] }
 spider_chrome = "2"
 headless_browser_lib = "0.1"
-tokio = { version = "1", features = ["rt-multi-thread", "signal", "macros", "net", "io-util"] }
 ```
 
 ```rust
@@ -131,8 +123,8 @@ tokio = { version = "1", features = ["rt-multi-thread", "signal", "macros", "net
 use chromiumoxide::browser::Browser;
 use futures_util::stream::StreamExt;
 
-#[tokio::test]
-async fn basic() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tokio::spawn(headless_browser_lib::run_main()); // spawn main server, proxy, and headless.
     tokio::time::sleep(std::time::Duration::from_millis(100)).await; // give a slight delay for now until we use a oneshot.
 
