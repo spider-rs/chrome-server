@@ -79,7 +79,6 @@ pub fn shutdown(pid: &u32) {
     let _ = Command::new("taskkill")
         .args(["/PID", &pid.to_string(), "/F"])
         .spawn();
-
 }
 
 /// Shutdown the chrome instance by process id.
@@ -259,12 +258,12 @@ async fn json_version_handler(
 
         if body.is_none() {
             // check the first instance.
-            if !checked_empty{
+            if !checked_empty {
                 checked_empty = true;
-                if CHROME_INSTANCES.lock().await.is_empty()  {
+                if CHROME_INSTANCES.lock().await.is_empty() {
                     break;
                 }
-            }            
+            }
             attempts += 1;
             tokio::time::sleep(Duration::from_millis(25)).await;
         }

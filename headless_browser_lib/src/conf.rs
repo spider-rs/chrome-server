@@ -255,7 +255,10 @@ lazy_static::lazy_static! {
 
         // handle testing and default to OS
         if default_path.is_empty() || default_path.trim() == "--nocapture" {
-            let chrome_path = std::env::var("CHROME_PATH").unwrap_or_default();
+            let chrome_path = match std::env::var("CHROME_PATH") {
+                Ok(p) => p,
+                _ => Default::default()
+            };
 
             if chrome_path.is_empty() {
                 get_default_chrome_bin().to_string()

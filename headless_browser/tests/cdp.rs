@@ -5,7 +5,7 @@ use std::time::Duration;
 #[tokio::test]
 async fn basic() -> Result<(), Box<dyn std::error::Error>> {
     tokio::spawn(headless_browser_lib::run_main());
-    tokio::time::sleep(Duration::from_millis(200)).await; // give a slight delay for now until we use a oneshot.
+    tokio::time::sleep(Duration::from_millis(2000)).await; // give a slight delay for now until we use a oneshot.
 
     let (browser, mut handler) =
         Browser::connect_with_config("http://127.0.0.1:6000/json/version", Default::default())
