@@ -34,7 +34,7 @@ jobs:
         run: cargo build --verbose --release
 
       - name: Build Headless-Shell
-        run: ./scripts/build-unpatched.sh
+        run: cp ./scripts/build-unpatched.sh ./build-unpatched.sh && ./build-unpatched.sh
 
       - name: Run tests
         run: CHROME_PATH="./out/headless-shell/headless-shell" cargo test --package headless_browser --test cdp
