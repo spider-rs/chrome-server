@@ -79,6 +79,7 @@ pub fn shutdown(pid: &u32) {
     let _ = Command::new("taskkill")
         .args(["/PID", &pid.to_string(), "/F"])
         .spawn();
+
 }
 
 /// Shutdown the chrome instance by process id.
@@ -263,8 +264,7 @@ async fn json_version_handler(
                 if CHROME_INSTANCES.lock().await.is_empty()  {
                     break;
                 }
-            }
-            
+            }            
             attempts += 1;
             tokio::time::sleep(Duration::from_millis(25)).await;
         }
@@ -300,7 +300,6 @@ pub async fn shutdown_instances() {
     }
 
     mutx.clear();
-    // clear the cache storing /json/version.
     CACHEABLE.store(false, std::sync::atomic::Ordering::Relaxed);
 }
 
@@ -318,9 +317,7 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
     match (req.method(), req.uri().path()) {
         (&Method::GET, "/health") => health_check_handler().await,
         (&Method::GET, "/") => health_check_handler().await,
-        (&Method::GET, "/json/version") => json_version_handler(None).await,
         (&Method::POST, "/fork") => fork_handler(None).await,
-        (&Method::POST, "/shutdown") => shutdown_handler().await,
         (&Method::POST, path) if path.starts_with("/fork/") => {
             if let Some(port) = path.split('/').nth(2) {
                 if let Ok(port) = port.parse::<u32>() {
@@ -336,6 +333,9 @@ async fn request_handler(req: Request<Incoming>) -> Result<Response<Full<Bytes>>
                 Ok(message)
             }
         }
+        // we only care about the main /json/version for 9223 for the proxy forwarder.
+        (&Method::GET, "/json/version") => json_version_handler(None).await,
+        (&Method::POST, "/shutdown") => shutdown_handler().await,
         _ => {
             let mut resp = Response::new(Full::new(Bytes::from("Not Found")));
 
@@ -365,7 +365,7 @@ pub async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> 
         *DEFAULT_PORT_SERVER,
     );
 
-    let listener = TcpListener::bind(addr).await.expect("addres allready in use. make sure to clear the env DEFAULT_PORT_SERVER");
+    let listener = TcpListener::bind(addr).await.expect("connection");
 
     let make_svc = async move {
         let builder_options = std::sync::Arc::new(
