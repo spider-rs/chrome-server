@@ -104,7 +104,7 @@ EXPOSE 9222 6000 9223
 COPY --from=rustbuilder /root/.cargo/bin/headless_browser /usr/local/bin/headless_browser
 COPY --from=pandabuilder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=pandabuilder /browser/zig-out/bin/lightpanda /bin/lightpanda
-COPY ../docker-entrypoint.sh /
+COPY ../scripts/docker-entrypoint.sh /
 
 RUN chmod +x /docker-entrypoint.sh
 

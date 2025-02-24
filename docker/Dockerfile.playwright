@@ -53,7 +53,7 @@ COPY --from=rustbuilder /usr/local/cargo/bin/headless_browser /usr/local/bin/hea
 RUN PLAYWRIGHT_CHROMIUM_PATH=$(find /root/.cache/ms-playwright | grep "chrome-linux/chrome$") && \
     cp $PLAYWRIGHT_CHROMIUM_PATH /chromium_path
 
-COPY ../docker-entrypoint.sh /
+COPY ../scripts/docker-entrypoint.sh /
 
 RUN apk add --no-cache tini curl sudo
 RUN chmod +x /docker-entrypoint.sh

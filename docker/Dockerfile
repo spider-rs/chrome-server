@@ -41,7 +41,7 @@ EXPOSE 9222 6000
 USER root
 
 COPY --from=rustbuilder /usr/local/cargo/bin/headless_browser /usr/local/bin/headless_browser
-COPY ../docker-entrypoint.sh /
+COPY ../scripts/docker-entrypoint.sh /
 
 RUN apk add --no-cache tini curl sudo nss dbus freetype harfbuzz ca-certificates libxcomposite libxrandr \
     libxdamage libxext libxshmfence mesa-gl udev

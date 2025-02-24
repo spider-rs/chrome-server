@@ -42,7 +42,7 @@ EXPOSE 9222 6000 9223
 USER root
 
 COPY --from=rustbuilder /root/.cargo/bin/headless_browser /usr/local/bin/headless_browser
-COPY ../docker-entrypoint.sh /
+COPY ../scripts/docker-entrypoint.sh /
 
 RUN chmod +x /docker-entrypoint.sh
 
