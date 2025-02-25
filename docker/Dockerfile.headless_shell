@@ -8,6 +8,7 @@ RUN apk upgrade --update-cache --available && \
 
 COPY ../headless_browser/ ./headless_browser
 COPY ../headless_browser_lib/ ./headless_browser_lib
+COPY ../benches/ ./benches
 COPY ../Cargo.* .
 
 RUN RUST_LOG=error cargo install --no-default-features --path headless_browser
