@@ -43,12 +43,13 @@ jobs:
           curl -SL https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.126/linux64/chrome-headless-shell-linux64.zip -o chrome-headless-shell-linux64.zip
           unzip chrome-headless-shell-linux64.zip -d ./out/latest/headless-shell
           chmod +x ./out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
-          chmod -R 777 ./out/latest/headless-shell/chrome-headless-shell-linux64
+          chmod -R 777 ./out/
           npx playwright install-deps chromium
 
-      # - name: Run Tests
-      #   run: |
-      #     cargo test --package headless_browser --test cdp
-      #   env: 
-      #     HEADLESS: true
-      #     CHROME_PATH: ./out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
+      - name: Run Tests
+        run: |
+          cargo test --package headless_browser --test cdp
+        env: 
+          HEADLESS: true
+          DEBUG_JSON: true
+          CHROME_PATH: ./out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
