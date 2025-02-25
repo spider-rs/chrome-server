@@ -1,18 +1,24 @@
 use chromiumoxide::{browser::Browser, error::CdpError};
 use futures_util::stream::StreamExt;
-use std::time::{Duration, Instant};
+use std::{
+    env::set_var,
+    time::{Duration, Instant},
+};
 
 #[tokio::test]
 /// Test the basic crawl with all of the major chromium based libs.
 /// example with chrome
 /// HEADLESS=true CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" DEBUG_JSON=true cargo test --package headless_browser --test cdp  -- --nocapture
-/// example with brave: 
+/// example with brave:
 /// HEADLESS=true CHROME_PATH="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" DEBUG_JSON=true cargo test --package headless_browser --test cdp  -- --nocapture
-/// example with headless-shell: (10x faster) 
+/// example with headless-shell: (10x faster)
 /// HEADLESS=true CHROME_PATH=./chrome-headless-shell/chromium_headless_shell-1155/chrome-mac/headless_shell DEBUG_JSON=true cargo test --package headless_browser --test cdp  -- --nocapture
 async fn basic() -> Result<(), Box<dyn std::error::Error>> {
+    set_var("CHROME_INIT", "ignore"); // ignore the auto start
+    tracing_subscriber::fmt::init();
+    headless_browser_lib::fork(Some(*headless_browser_lib::conf::DEFAULT_PORT)).await;
     tokio::spawn(headless_browser_lib::run_main());
-    tokio::time::sleep(Duration::from_millis(1000)).await; // give a slight delay for now until we use a oneshot.
+    tokio::time::sleep(Duration::from_millis(100)).await; // give a slight delay for now until we use a oneshot.
 
     let start = Instant::now();
 
@@ -45,8 +51,6 @@ async fn basic() -> Result<(), Box<dyn std::error::Error>> {
 
     let elasped = start.elapsed();
 
-    println!("Time took: {:?}", elasped);
-
     browser.close().await?;
     let _ = handle.await;
 
@@ -59,6 +63,8 @@ async fn basic() -> Result<(), Box<dyn std::error::Error>> {
 
     assert_eq!(example_html.is_empty(), false);
     assert_eq!(example_html.len() >= 400, true);
+
+    println!("Time took: {:?}", elasped);
 
     Ok(())
 }

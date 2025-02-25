@@ -1,8 +1,11 @@
 use cached::proc_macro::once;
 
-mod conf;
+/// Chrome configuration.
+pub mod conf;
+/// Chrome json modifiers.
 mod modify;
-mod proxy;
+/// Proxy forwarder TCP to chrome instances.
+pub mod proxy;
 
 use conf::{
     CACHEABLE, CHROME_ADDRESS, CHROME_ARGS, CHROME_INSTANCES, CHROME_PATH, DEBUG_JSON,
@@ -99,13 +102,23 @@ pub fn shutdown(pid: &u32) {
     let _ = Command::new("kill").args(["-9", &pid.to_string()]).spawn();
 }
 
+#[cfg(test)]
+pub fn get_chrome_args_test() -> [&'static str; 7] {
+    *crate::conf::CHROME_ARGS_TEST
+}
+
+#[cfg(not(test))]
+pub fn get_chrome_args_test() -> [&'static str; 91] {
+    *crate::conf::CHROME_ARGS
+}
+
 /// Fork a chrome process.
 pub async fn fork(port: Option<u32>) -> String {
     let id = if !*LIGHT_PANDA {
         let mut command = Command::new(&*CHROME_PATH);
 
-        let cmd = if *crate::conf::NO_ARGS {
-            let mut chrome_args = crate::conf::CHROME_ARGS_TEST.map(|e| e.to_string());
+        let cmd = if *crate::conf::TEST_NO_ARGS {
+            let mut chrome_args = get_chrome_args_test().map(|e| e.to_string());
             if !CHROME_ADDRESS.is_empty() {
                 chrome_args[0] =
                     format!("--remote-debugging-address={}", &CHROME_ADDRESS.to_string());
@@ -126,13 +139,16 @@ pub async fn fork(port: Option<u32>) -> String {
             command.args(&chrome_args)
         };
 
-        let id = if let Ok(child) = cmd.spawn() {
-            let cid = child.id();
-            tracing::info!("Chrome PID: {}", cid);
-            cid
-        } else {
-            tracing::error!("chrome command didn't start");
-            0
+        let id = match cmd.spawn() {
+            Ok(child) => {
+                let cid = child.id();
+                tracing::info!("Chrome PID: {}", cid);
+                cid
+            }
+            Err(e) => {
+                tracing::error!("{} command didn't start {:?}", &*CHROME_PATH, e);
+                0
+            }
         };
 
         id

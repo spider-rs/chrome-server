@@ -1,6 +1,70 @@
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
+#[cfg(test)]
+lazy_static::lazy_static! {
+    /// The chrome args to use test ( basic without anything used for testing ).
+    pub(crate) static ref CHROME_ARGS_TEST: [&'static str; 7] = {
+        let headless = std::env::args()
+        .nth(6)
+        .unwrap_or("true".into());
+
+        let headless = if headless != "false" {
+            match std::env::var("HEADLESS") {
+                Ok(h) => {
+                    if h == "false" {
+                        ""
+                    } else if h == "new" {
+                        "--headless=new"
+                    }else {
+                        "--headless"
+                    }
+                }
+                _ => "--headless"
+            }
+        } else {
+            ""
+        };
+
+        let port = if DEFAULT_PORT.eq(&9223) {
+            "--remote-debugging-port=9223"
+        } else if DEFAULT_PORT.eq(&9224) {
+            "--remote-debugging-port=9224"
+        } else {
+            "--remote-debugging-port=9222"
+        };
+
+        let use_gl = match std::env::var("CHROME_GL") {
+            Ok(h) => {
+                if h == "angle" {
+                    "--use-gl=angle"
+                } else {
+                    "--use-gl=swiftshader"
+                }
+            }
+            _ => "--use-gl=angle"
+        };
+
+        let gpu = std::env::var("ENABLE_GPU").unwrap_or_default() == "true";
+
+        let gpu_enabled = if gpu { "--enable-gpu" } else { "--disable-gpu" };
+        let gpu_enabled_sandboxed = if gpu { "--enable-gpu-sandbox" } else { "--disable-gpu-sandbox" };
+
+        [
+            // *SPECIAL*
+            "--remote-debugging-address=0.0.0.0",
+            port,
+            // *SPECIAL*
+            headless,
+            gpu_enabled,
+            gpu_enabled_sandboxed,
+            use_gl,
+            // fast forward time on non headless-shell. Confirmed working for chromium builds.
+            if *BRAVE_INSTANCE { "--virtual-time-budget=60000" } else { "" },
+        ]
+    };
+}
+
 lazy_static::lazy_static! {
     /// Is the instance healthy?
     pub static ref IS_HEALTHY: AtomicBool = AtomicBool::new(true);
@@ -189,67 +253,6 @@ lazy_static::lazy_static! {
         ]
     };
 
-    /// The chrome args to use test ( basic without anything used for testing ).
-    pub(crate) static ref CHROME_ARGS_TEST: [&'static str; 7] = {
-        let headless = std::env::args()
-        .nth(6)
-        .unwrap_or("true".into());
-
-        let headless = if headless != "false" {
-            match std::env::var("HEADLESS") {
-                Ok(h) => {
-                    if h == "false" {
-                        ""
-                    } else if h == "new" {
-                        "--headless=new"
-                    }else {
-                        "--headless"
-                    }
-                }
-                _ => "--headless"
-            }
-        } else {
-            ""
-        };
-
-        let port = if DEFAULT_PORT.eq(&9223) {
-            "--remote-debugging-port=9223"
-        } else if DEFAULT_PORT.eq(&9224) {
-            "--remote-debugging-port=9224"
-        } else {
-            "--remote-debugging-port=9222"
-        };
-
-        let use_gl = match std::env::var("CHROME_GL") {
-            Ok(h) => {
-                if h == "angle" {
-                    "--use-gl=angle"
-                } else {
-                    "--use-gl=swiftshader"
-                }
-            }
-            _ => "--use-gl=angle"
-        };
-
-        let gpu = std::env::var("ENABLE_GPU").unwrap_or_default() == "true";
-
-        let gpu_enabled = if gpu { "--enable-gpu" } else { "--disable-gpu" };
-        let gpu_enabled_sandboxed = if gpu { "--enable-gpu-sandbox" } else { "--disable-gpu-sandbox" };
-
-        [
-            // *SPECIAL*
-            "--remote-debugging-address=0.0.0.0",
-            port,
-            // *SPECIAL*
-            headless,
-            gpu_enabled,
-            gpu_enabled_sandboxed,
-            use_gl,
-            // fast forward time on non headless-shell. Confirmed working for chromium builds.
-            if *BRAVE_INSTANCE { "--virtual-time-budget=60000" } else { "" },
-        ]
-    };
-
     /// The light panda args to use.
     pub static ref LIGHTPANDA_ARGS: [&'static str; 2] = {
         let port = if DEFAULT_PORT.eq(&9223) {
@@ -348,7 +351,7 @@ lazy_static::lazy_static! {
     /// Debug the json version endpoint.
     pub(crate) static ref DEBUG_JSON: bool = std::env::var("DEBUG_JSON").unwrap_or_default() == "true";
     /// Test headless without args.
-    pub(crate) static ref NO_ARGS: bool = std::env::var("NO_ARGS").unwrap_or_default() == "true";
+    pub(crate) static ref TEST_NO_ARGS: bool = std::env::var("TEST_NO_ARGS").unwrap_or_default() == "true";
 }
 
 /// Get the default chrome bin location per OS.
