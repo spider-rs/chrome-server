@@ -53,8 +53,7 @@ async fn navigate_extract_and_close(u: &str) -> Result<(), Box<dyn std::error::E
     let page = browser.new_page(u).await?;
     page.wait_for_navigation().await?.content().await?;
 
-    browser.close().await?;
-    let _ = handle.await;
+    handle.abort(); // abort the handle to drop the connection
 
     Ok(())
 }
