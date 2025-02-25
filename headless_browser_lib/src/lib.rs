@@ -61,7 +61,7 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
                     }
                     // empty prevent connections retrying
                     if attempts >= 8  && CHROME_INSTANCES.lock().await.is_empty() {
-                        tracing::warn!("ConnectionRefused: {}. Attempt {} of 20", e, attempts);
+                        tracing::warn!("ConnectionRefused: {}. Attempt {} of 8", e, attempts);
                         return None;
                     }
                 }

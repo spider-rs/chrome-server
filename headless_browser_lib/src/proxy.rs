@@ -95,13 +95,14 @@ pub(crate) mod proxy {
         }
     }
 
+    /// Handle the proxy connection.
     async fn handle_connection(client_stream: &mut TcpStream) -> std::io::Result<()> {
         let server_stream: Option<TcpStream> = connect_with_retries(*crate::proxy::TARGET).await;
 
         if let Some(mut server_stream) = server_stream {
             let buffer_size = *crate::proxy::BUFFER_SIZE;
-            let mut buf1 = vec![0u8; buffer_size].into_boxed_slice();
-            let mut buf2 = vec![0u8; buffer_size].into_boxed_slice();
+            let mut buf1 = vec![0u8; buffer_size];
+            let mut buf2 = vec![0u8; buffer_size];
 
             loop {
                 tokio::select! {

@@ -573,7 +573,7 @@ dependencies = [
 
 [[package]]
 name = "headless_browser"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "futures-util",
  "headless_browser_lib",
@@ -586,7 +586,7 @@ dependencies = [
 
 [[package]]
 name = "headless_browser_lib"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "cached",
  "http-body-util",
@@ -1735,9 +1735,9 @@ dependencies = [
 
 [[package]]
 name = "spider_chrome"
-version = "2.30.23"
+version = "2.30.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56ab0c7daafeeac2706f62d4dd5d15f5945dc9fb44b129f238d2fcb329de1f04"
+checksum = "83acd9e73502230b266084c769a1fe610af6d85ac8f78f03c51f9aa8ad85fe26"
 dependencies = [
  "aho-corasick",
  "base64",
