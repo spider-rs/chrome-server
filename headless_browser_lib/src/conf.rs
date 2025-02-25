@@ -315,10 +315,12 @@ lazy_static::lazy_static! {
     };
     /// The chrome launch path.
     pub static ref CHROME_PATH: String = {
+        // cargo bench will always pass in the first arg
         let default_path = std::env::args().nth(1).unwrap_or_default();
+        let trimmed_path = default_path.trim();
 
         // handle testing and default to OS
-        if default_path.is_empty() || default_path.trim() == "--nocapture" {
+        if default_path.is_empty() || trimmed_path == "--nocapture" || trimmed_path == "--bench" {
             let chrome_path = match std::env::var("CHROME_PATH") {
                 Ok(p) => p,
                 _ => Default::default()
