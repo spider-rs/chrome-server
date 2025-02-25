@@ -39,16 +39,32 @@ jobs:
 
       - name: Download and Set Up Headless-Shell
         run: |
-          mkdir -p ./out/latest/headless-shell
-          curl -SL https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.126/linux64/chrome-headless-shell-linux64.zip -o chrome-headless-shell-linux64.zip
-          unzip chrome-headless-shell-linux64.zip -d ./out/latest/headless-shell
-          chmod +x ./out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
-          chmod -R 777 ./out/latest/headless-shell/chrome-headless-shell-linux64
+          sudo mkdir -p /out/latest/headless-shell
+          sudo curl -SL https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.126/linux64/chrome-headless-shell-linux64.zip -o chrome-headless-shell-linux64.zip
+          sudo unzip chrome-headless-shell-linux64.zip -d /out/latest/headless-shell
+          sudo chmod +x /out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
+          sudo chmod -R 777 /out
           npx playwright install-deps chromium
 
-      # - name: Run Tests
-      #   run: |
-      #     cargo test --package headless_browser --test cdp
-      #   env: 
-      #     HEADLESS: true
-      #     CHROME_PATH: ./out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
+      - name: Test Chrome Installation
+        run: |
+          /out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell \
+          --headless \
+          --no-sandbox \
+          --disable-gpu \
+          --dump-dom https://www.example.com \
+          > test_output.txt
+          if grep -q "Example Domain" test_output.txt; then
+            echo "Chrome headless shell is functioning properly."
+          else
+            echo "Failed to run Chrome headless shell." && exit 1
+          fi
+          
+      - name: Run Tests
+        run: |
+          cargo test --package headless_browser --test cdp -- --nocapture
+        env: 
+          HEADLESS: true
+          CHROME_PATH: /out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
+          RUST_LOG: info,error,warn
+          TEST_NO_ARGS: false

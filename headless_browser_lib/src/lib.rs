@@ -1,8 +1,11 @@
 use cached::proc_macro::once;
 
-mod conf;
+/// Chrome configuration.
+pub mod conf;
+/// Chrome json modifiers.
 mod modify;
-mod proxy;
+/// Proxy forwarder TCP to chrome instances.
+pub mod proxy;
 
 use conf::{
     CACHEABLE, CHROME_ADDRESS, CHROME_ARGS, CHROME_INSTANCES, CHROME_PATH, DEBUG_JSON,
@@ -60,7 +63,7 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
                         connection_failed = true;
                     }
                     // empty prevent connections retrying
-                    if attempts >= 8  && CHROME_INSTANCES.lock().await.is_empty() {
+                    if attempts >= 8 && CHROME_INSTANCES.lock().await.is_empty() {
                         tracing::warn!("ConnectionRefused: {}. Attempt {} of 8", e, attempts);
                         return None;
                     }
@@ -99,29 +102,53 @@ pub fn shutdown(pid: &u32) {
     let _ = Command::new("kill").args(["-9", &pid.to_string()]).spawn();
 }
 
+#[cfg(test)]
+pub fn get_chrome_args_test() -> [&'static str; 7] {
+    *crate::conf::CHROME_ARGS_TEST
+}
+
+#[cfg(not(test))]
+pub fn get_chrome_args_test() -> [&'static str; 91] {
+    *crate::conf::CHROME_ARGS
+}
+
 /// Fork a chrome process.
 pub async fn fork(port: Option<u32>) -> String {
     let id = if !*LIGHT_PANDA {
         let mut command = Command::new(&*CHROME_PATH);
-        let mut chrome_args = CHROME_ARGS.map(|e| e.to_string());
 
-        if !CHROME_ADDRESS.is_empty() {
-            chrome_args[0] = format!("--remote-debugging-address={}", &CHROME_ADDRESS.to_string());
-        }
-
-        if let Some(port) = port {
-            chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
-        }
-
-        let cmd = command.args(&chrome_args);
-
-        let id = if let Ok(child) = cmd.spawn() {
-            let cid = child.id();
-            tracing::info!("Chrome PID: {}", cid);
-            cid
+        let cmd = if *crate::conf::TEST_NO_ARGS {
+            let mut chrome_args = get_chrome_args_test().map(|e| e.to_string());
+            if !CHROME_ADDRESS.is_empty() {
+                chrome_args[0] =
+                    format!("--remote-debugging-address={}", &CHROME_ADDRESS.to_string());
+            }
+            if let Some(port) = port {
+                chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
+            }
+            command.args(&chrome_args)
         } else {
-            tracing::error!("chrome command didn't start");
-            0
+            let mut chrome_args = CHROME_ARGS.map(|e| e.to_string());
+            if !CHROME_ADDRESS.is_empty() {
+                chrome_args[0] =
+                    format!("--remote-debugging-address={}", &CHROME_ADDRESS.to_string());
+            }
+            if let Some(port) = port {
+                chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
+            }
+            command.args(&chrome_args)
+        };
+
+        let id = match cmd.spawn() {
+            Ok(child) => {
+                let cid = child.id();
+                tracing::info!("Chrome PID: {}", cid);
+                cid
+            }
+            Err(e) => {
+                tracing::error!("{} command didn't start {:?}", &*CHROME_PATH, e);
+                0
+            }
         };
 
         id
