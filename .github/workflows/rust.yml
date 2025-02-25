@@ -11,6 +11,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.50.1-noble
+      options: --user 1001
     steps:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4

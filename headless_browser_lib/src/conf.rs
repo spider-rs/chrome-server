@@ -44,7 +44,7 @@ lazy_static::lazy_static! {
         || CHROME_PATH.ends_with("lightpanda-x86_64-linux")
     };
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 89] = {
+    pub static ref CHROME_ARGS: [&'static str; 91] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -160,9 +160,8 @@ lazy_static::lazy_static! {
             "--no-subproc-heap-profiling",
             "--no-pre-read-main-dll",
             "--disable-stack-profiler",
-            // could be useful to crash on hangs
-            // --crash-on-hang-threads
-            // --restore-last-session
+            "--crash-on-hang-threads",
+            "--restore-last-session",
             // "--disable-dns-proxy",
             // "--enable-root-ns-dns-proxy",
             "--ip-protection-proxy-opt-out",
