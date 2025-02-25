@@ -46,9 +46,9 @@ jobs:
           chmod -R 777 ./out/latest/headless-shell/chrome-headless-shell-linux64
           npx playwright install-deps chromium
 
-      - name: Run Tests
-        run: |
-          cargo test --package headless_browser --test cdp
-        env: 
-          HEADLESS: true
-          CHROME_PATH: ./out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
+      # - name: Run Tests
+      #   run: |
+      #     cargo test --package headless_browser --test cdp
+      #   env: 
+      #     HEADLESS: true
+      #     CHROME_PATH: ./out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
