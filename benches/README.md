@@ -53,3 +53,13 @@ When you run the benches make sure to pass in the CHROME_PATH env.
 ```sh
 HEADLESS=true CHROME_PATH=./chrome-headless-shell/chromium_headless_shell-1155/chrome-mac/headless_shell cargo bench
 ```
+
+## Logs
+
+View the [logs](./logs/) to see the runs with the machine used and history of the args for the performance.
+The `noargs_log` has the headless instance launched with minimal args required to run.
+
+### Mac
+
+[Darwin_v10cpu_benchmark_logs.txt](./logs/Darwin_v10cpu_benchmark_logs.txt)
+[Darwin_v10cpu_benchmark_noargs_logs.txt](./logs/Darwin_v10cpu_benchmark_noargs_logs.txt)
