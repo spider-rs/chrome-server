@@ -61,10 +61,24 @@ The `Argless` has the headless instance launched with minimal args required to r
 
 ### Mac
 
+Sync 10x
+
 * [Darwin_v10cpu](./logs/Darwin_v10cpu_benchmark_logs.txt)
 * [Darwin_v10cpu Argless](./logs/Darwin_v10cpu_benchmark_noargs_logs.txt)
 
+Concurrent 10x
+
+* [Darwin_v10cpu](./logs_concurrent/Darwin_v10cpu_benchmark_logs.txt)
+* [Darwin_v10cpu Argless](./logs_concurrent/Darwin_v10cpu_benchmark_noargs_logs.txt)
+
 ### Linux
+
+Sync 10x
 
 * [Linux_v4cpu](./logs/Linux_v4cpu_benchmark_logs.txt)
 * [Linux_v4cpu Argless](./logs/Linux_v4cpu_benchmark_noargs_logs.txt)
+
+Concurrent 10x
+
+* [Linux_v4cpu](./logs_concurrent/Linux_v4cpu_benchmark_logs.txt)
+* [Linux_v4cpu Argless](./logs_concurrent/Linux_v4cpu_benchmark_noargs_logs.txt)

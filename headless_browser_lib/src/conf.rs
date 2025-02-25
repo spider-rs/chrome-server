@@ -76,6 +76,7 @@ lazy_static::lazy_static! {
             .unwrap_or("9223".into())
             .parse::<u32>()
             .unwrap_or_default();
+
         let default_port = if default_port == 0 {
             9223
         } else {

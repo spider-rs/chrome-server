@@ -1,0 +1,8 @@
+<http://spider.cloud> - 10 SAMPLES
+CHROME_PATH: headless_shell
+CHROME_ARGS: (6)("--remote-debugging-address=0.0.0.0,--remote-debugging-port=9223,--headless,--disable-gpu,--disable-gpu-sandbox,--use-gl=angle")
+MACHINE: Darwin/v10cpu
+DATE: 2025-02-25 13:16:24
+Total Duration: 609.04825ms
+Average Duration: 394.105729ms
+

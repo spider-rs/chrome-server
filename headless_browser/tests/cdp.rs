@@ -11,7 +11,7 @@ async fn basic() -> Result<(), Box<dyn std::error::Error>> {
     set_var("CHROME_INIT", "ignore"); // ignore the auto start
     tracing_subscriber::fmt::init();
     headless_browser_lib::fork(Some(*headless_browser_lib::conf::DEFAULT_PORT)).await;
-    tokio::spawn(headless_browser_lib::run_main());
+    let task = tokio::spawn(headless_browser_lib::run_main());
     tokio::time::sleep(Duration::from_millis(100)).await; // give a slight delay for now until we use a oneshot.
 
     let start = Instant::now();
@@ -59,6 +59,7 @@ async fn basic() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(example_html.len() >= 400, true);
 
     println!("Time took: {:?}", elasped);
+    task.abort();
 
     Ok(())
 }
