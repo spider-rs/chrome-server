@@ -103,11 +103,13 @@ pub fn shutdown(pid: &u32) {
 }
 
 #[cfg(test)]
+/// Arguments to test headless without any extra args. Only applies during 'cargo test'.
 pub fn get_chrome_args_test() -> [&'static str; 7] {
     *crate::conf::CHROME_ARGS_TEST
 }
 
 #[cfg(not(test))]
+/// Arguments to test headless without any extra args. Only applies during 'cargo test'.
 pub fn get_chrome_args_test() -> [&'static str; 91] {
     *crate::conf::CHROME_ARGS
 }

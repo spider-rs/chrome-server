@@ -7,12 +7,6 @@ use std::{
 
 #[tokio::test]
 /// Test the basic crawl with all of the major chromium based libs.
-/// example with chrome
-/// HEADLESS=true CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" DEBUG_JSON=true cargo test --package headless_browser --test cdp  -- --nocapture
-/// example with brave:
-/// HEADLESS=true CHROME_PATH="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" DEBUG_JSON=true cargo test --package headless_browser --test cdp  -- --nocapture
-/// example with headless-shell: (10x faster)
-/// HEADLESS=true CHROME_PATH=./chrome-headless-shell/chromium_headless_shell-1155/chrome-mac/headless_shell DEBUG_JSON=true cargo test --package headless_browser --test cdp  -- --nocapture
 async fn basic() -> Result<(), Box<dyn std::error::Error>> {
     set_var("CHROME_INIT", "ignore"); // ignore the auto start
     tracing_subscriber::fmt::init();

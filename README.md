@@ -128,7 +128,8 @@ use futures_util::stream::StreamExt;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tokio::spawn(headless_browser_lib::run_main()); // spawn main server, proxy, and headless.
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await; // give a slight delay for now until we use a oneshot.
+    tokio::time::sleep(std::time::Duration::from_millis(200)).await; // give a slight delay for now until we use a oneshot.
+    let start = std::time::Instant::now();
 
     let (browser, mut handler) =
          // port 6000 - main server entry for routing correctly across networks.
@@ -160,14 +161,59 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let spider_html = spider_html?;
     let example_html = example_html?;
 
+    let elasped = start.elapsed();
+
     browser.close().await?;
     let _ = handle.await;
 
     println!("===\n{}\n{}\n===", "spider.cloud", spider_html);
     println!("===\n{}\n{}\n===", "example.com", example_html);
+    println!("Time took: {:?}", elasped);
 
     Ok(())
 }
+```
+
+## Testing and Benchmarks
+
+### Google Chrome
+
+example with Google Chrome ( reliable and fast ).
+
+```sh
+HEADLESS=true CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" cargo test --package headless_browser --test cdp  -- --nocapture
+# NewPage(https://example.com): 172.977417ms
+# WaitForNavigationAndContent(https://example.com): 834.417µs
+# NewPage(https://spider.cloud): 510.849ms
+# WaitForNavigationAndContent(https://spider.cloud): 24.371167ms
+# Time took: 943.520375ms
+```
+
+### Chrome Headless Shell
+
+example with Google Chrome headless-shell: (4x faster).
+
+```sh
+ HEADLESS=true CHROME_PATH=./chrome-headless-shell/chromium_headless_shell-1155/chrome-mac/headless_shell cargo test --package headless_browser --test cdp  -- --nocapture
+# NewPage(https://example.com): 51.755125ms
+# WaitForNavigationAndContent(https://example.com): 840.084µs
+# NewPage(https://spider.cloud): 221.127334ms
+# WaitForNavigationAndContent(https://spider.cloud): 22.51475ms
+# Time took: 270.031125ms
+```
+
+### Brave Browser
+
+example with brave(20x slower).
+
+```sh
+HEADLESS=true CHROME_PATH="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" cargo test --package headless_browser --test cdp  -- --nocapture
+# tracing_subscriber - init success
+# NewPage(https://example.com): 330.683583ms
+# WaitForNavigationAndContent(https://example.com): 6.106042ms
+# NewPage(https://spider.cloud): 5.562166083s
+# WaitForNavigationAndContent(https://spider.cloud): 26.116667ms
+# Time took: 11.003418416s
 ```
 
 ## License
