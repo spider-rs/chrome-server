@@ -60,7 +60,7 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
                         connection_failed = true;
                     }
                     // empty prevent connections retrying
-                    if attempts >= 8  && CHROME_INSTANCES.lock().await.is_empty() {
+                    if attempts >= 8 && CHROME_INSTANCES.lock().await.is_empty() {
                         tracing::warn!("ConnectionRefused: {}. Attempt {} of 8", e, attempts);
                         return None;
                     }
@@ -103,17 +103,28 @@ pub fn shutdown(pid: &u32) {
 pub async fn fork(port: Option<u32>) -> String {
     let id = if !*LIGHT_PANDA {
         let mut command = Command::new(&*CHROME_PATH);
-        let mut chrome_args = CHROME_ARGS.map(|e| e.to_string());
 
-        if !CHROME_ADDRESS.is_empty() {
-            chrome_args[0] = format!("--remote-debugging-address={}", &CHROME_ADDRESS.to_string());
-        }
-
-        if let Some(port) = port {
-            chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
-        }
-
-        let cmd = command.args(&chrome_args);
+        let cmd = if *crate::conf::NO_ARGS {
+            let mut chrome_args = crate::conf::CHROME_ARGS_TEST.map(|e| e.to_string());
+            if !CHROME_ADDRESS.is_empty() {
+                chrome_args[0] =
+                    format!("--remote-debugging-address={}", &CHROME_ADDRESS.to_string());
+            }
+            if let Some(port) = port {
+                chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
+            }
+            command.args(&chrome_args)
+        } else {
+            let mut chrome_args = CHROME_ARGS.map(|e| e.to_string());
+            if !CHROME_ADDRESS.is_empty() {
+                chrome_args[0] =
+                    format!("--remote-debugging-address={}", &CHROME_ADDRESS.to_string());
+            }
+            if let Some(port) = port {
+                chrome_args[1] = format!("--remote-debugging-port={}", &port.to_string());
+            }
+            command.args(&chrome_args)
+        };
 
         let id = if let Ok(child) = cmd.spawn() {
             let cid = child.id();

@@ -96,6 +96,11 @@ lazy_static::lazy_static! {
             port,
             // *SPECIAL*
             headless,
+            gpu_enabled,
+            gpu_enabled_sandboxed,
+            use_gl,
+            // fast forward time on non headless-shell. Confirmed working for chromium builds.
+            if *BRAVE_INSTANCE { "--virtual-time-budget=60000" } else { "" },
             "--no-first-run",
             "--no-sandbox",
             "--disable-setuid-sandbox",
@@ -104,8 +109,6 @@ lazy_static::lazy_static! {
             "--user-data-dir=~/.config/google-chrome",
             "--allow-running-insecure-content",
             "--autoplay-policy=user-gesture-required",
-            gpu_enabled,
-            gpu_enabled_sandboxed,
             "--ignore-certificate-errors",
             "--no-default-browser-check",
             "--disable-dev-shm-usage", // required or else container will crash not enough memory
@@ -117,8 +120,6 @@ lazy_static::lazy_static! {
             "--disable-site-isolation-trials",
             "--disable-web-security",
             "--disable-threaded-animation",
-            // fast forward time on non headless-shell. Confirmed working for chromium builds.
-            if *BRAVE_INSTANCE { "--virtual-time-budget=60000" } else { "" },
             "--disable-sync",
             "--disable-print-preview",
             "--disable-search-engine-choice-screen",
@@ -162,8 +163,6 @@ lazy_static::lazy_static! {
             "--disable-stack-profiler",
             "--crash-on-hang-threads",
             "--restore-last-session",
-            // "--disable-dns-proxy",
-            // "--enable-root-ns-dns-proxy",
             "--ip-protection-proxy-opt-out",
             "--unsafely-disable-devtools-self-xss-warning",
             "--enable-features=PdfOopif,SharedArrayBuffer,NetworkService,NetworkServiceInProcess",
@@ -179,7 +178,6 @@ lazy_static::lazy_static! {
             "--no-pings",
             "--rusty-png",
             "--disable-histogram-customizer",
-            use_gl,
             "--window-size=800,600",
             "--disable-vulkan-fallback-to-gl-for-testing",
             "--disable-vulkan-surface",
@@ -190,6 +188,68 @@ lazy_static::lazy_static! {
             "--disable-features=PaintHolding,HttpsUpgrades,DeferRendererTasksAfterInput,LensOverlay,ThirdPartyStoragePartitioning,IsolateSandboxedIframes,ProcessPerSiteUpToMainFrameThreshold,site-per-process,WebUIJSErrorReportingExtended,DIPS,InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
         ]
     };
+
+    /// The chrome args to use test ( basic without anything used for testing ).
+    pub(crate) static ref CHROME_ARGS_TEST: [&'static str; 7] = {
+        let headless = std::env::args()
+        .nth(6)
+        .unwrap_or("true".into());
+
+        let headless = if headless != "false" {
+            match std::env::var("HEADLESS") {
+                Ok(h) => {
+                    if h == "false" {
+                        ""
+                    } else if h == "new" {
+                        "--headless=new"
+                    }else {
+                        "--headless"
+                    }
+                }
+                _ => "--headless"
+            }
+        } else {
+            ""
+        };
+
+        let port = if DEFAULT_PORT.eq(&9223) {
+            "--remote-debugging-port=9223"
+        } else if DEFAULT_PORT.eq(&9224) {
+            "--remote-debugging-port=9224"
+        } else {
+            "--remote-debugging-port=9222"
+        };
+
+        let use_gl = match std::env::var("CHROME_GL") {
+            Ok(h) => {
+                if h == "angle" {
+                    "--use-gl=angle"
+                } else {
+                    "--use-gl=swiftshader"
+                }
+            }
+            _ => "--use-gl=angle"
+        };
+
+        let gpu = std::env::var("ENABLE_GPU").unwrap_or_default() == "true";
+
+        let gpu_enabled = if gpu { "--enable-gpu" } else { "--disable-gpu" };
+        let gpu_enabled_sandboxed = if gpu { "--enable-gpu-sandbox" } else { "--disable-gpu-sandbox" };
+
+        [
+            // *SPECIAL*
+            "--remote-debugging-address=0.0.0.0",
+            port,
+            // *SPECIAL*
+            headless,
+            gpu_enabled,
+            gpu_enabled_sandboxed,
+            use_gl,
+            // fast forward time on non headless-shell. Confirmed working for chromium builds.
+            if *BRAVE_INSTANCE { "--virtual-time-budget=60000" } else { "" },
+        ]
+    };
+
     /// The light panda args to use.
     pub static ref LIGHTPANDA_ARGS: [&'static str; 2] = {
         let port = if DEFAULT_PORT.eq(&9223) {
@@ -287,6 +347,8 @@ lazy_static::lazy_static! {
     };
     /// Debug the json version endpoint.
     pub(crate) static ref DEBUG_JSON: bool = std::env::var("DEBUG_JSON").unwrap_or_default() == "true";
+    /// Test headless without args.
+    pub(crate) static ref NO_ARGS: bool = std::env::var("NO_ARGS").unwrap_or_default() == "true";
 }
 
 /// Get the default chrome bin location per OS.
