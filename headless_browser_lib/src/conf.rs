@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
 /// The performance arg count.
-pub(crate) const PERF_ARGS: usize = 92;
+pub(crate) const PERF_ARGS: usize = 98;
 
 #[cfg(any(test, feature = "testing"))]
 lazy_static::lazy_static! {
@@ -192,6 +192,7 @@ lazy_static::lazy_static! {
             "--use-angle=swiftshader",
             "--disable-low-res-tiling",
             "--disable-speech-api",
+            "--disable-oobe-chromevox-hint-timer-for-testing",
             "--disable-smooth-scrolling",
             "--disable-default-apps",
             "--disable-prompt-on-repost",
@@ -227,6 +228,7 @@ lazy_static::lazy_static! {
             "--no-subproc-heap-profiling",
             "--no-pre-read-main-dll",
             "--disable-stack-profiler",
+            "--disable-libassistant-logfile",
             "--crash-on-hang-threads",
             "--restore-last-session",
             "--ip-protection-proxy-opt-out",
@@ -248,6 +250,10 @@ lazy_static::lazy_static! {
             "--disable-vulkan-fallback-to-gl-for-testing",
             "--disable-vulkan-surface",
             "--disable-webrtc",
+            "--disable-oopr-debug-crash-dump",
+            "--disable-pnacl-crash-throttling",
+            "--disable-renderer-accessibility",
+            "--renderer-process-limit=0",
             "--disable-blink-features=AutomationControlled",
             "--disable-ipc-flooding-protection", // we do not need to throttle navigation for https://github.com/spider-rs/spider/commit/9ff5bbd7a2656b8edb84b62843b72ae9d09af079#diff-75ce697faf0d37c3dff4a3a19e7524798b3cb5487f8f54beb5d04c4d48e34234R446.
             // --deterministic-mode 10-20% drop in perf

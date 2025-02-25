@@ -10,17 +10,16 @@ use std::{
 };
 
 const LOG_DIR: &str = "logs";
-const SAMPLE_COUNT: u32 = 10;
 
 /// Run the benchmarks to the env BENCH_URL.
-pub async fn run(log_file_name: &str) {
+pub async fn run(log_file_name: &str, samples: u32) {
     ensure_log_directory_exists(LOG_DIR).expect("Failed to create log directory");
     let query = env::var("BENCH_URL").unwrap_or_else(|_| "http://spider.cloud".into());
     let mut total_duration = Duration::new(0, 0);
     let current_time = Instant::now();
 
-    for i in 0..SAMPLE_COUNT {
-        println!("Running sample {} of {}", i + 1, SAMPLE_COUNT);
+    for i in 0..samples {
+        println!("Running sample {} of {}", i + 1, samples);
 
         let start_time = Instant::now();
         let result = navigate_extract_and_close(&query).await;
@@ -35,15 +34,15 @@ pub async fn run(log_file_name: &str) {
         total_duration += duration;
     }
 
-    let average_duration = total_duration.div(SAMPLE_COUNT);
+    let average_duration = total_duration.div(samples);
     let total_time = current_time.elapsed();
 
     println!(
         "Finished average time: {:?} - total time: {:?}",
-        average_duration,total_time
+        average_duration, total_time
     );
 
-    log_performance(total_time, average_duration, &query, log_file_name)
+    log_performance(total_time, average_duration, &query, log_file_name, samples)
         .expect("Failed to log performance");
 }
 
@@ -61,6 +60,7 @@ fn log_performance(
     current_avg: Duration,
     query: &str,
     log_file_name: &str,
+    samples: u32,
 ) -> io::Result<()> {
     let os_type = sys_info::os_type().unwrap_or_default();
     let cpu_count = sys_info::cpu_num().unwrap_or_default().to_string();
@@ -115,7 +115,7 @@ fn log_performance(
 
         writeln!(
             log_file,
-            "<{query}> - {SAMPLE_COUNT} SAMPLES\nCHROME_PATH: {}\nCHROME_ARGS: {}\nMACHINE: {}\nDATE: {}\nTotal Duration: {:?}\nAverage Duration: {:?}\n",
+            "<{query}> - {samples} SAMPLES\nCHROME_PATH: {}\nCHROME_ARGS: {}\nMACHINE: {}\nDATE: {}\nTotal Duration: {:?}\nAverage Duration: {:?}\n",
             chrome_path,
             chrome_args,
             format!("{}/v{}cpu", os_type, cpu_count),

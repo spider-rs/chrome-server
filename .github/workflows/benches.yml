@@ -52,6 +52,7 @@ jobs:
           CHROME_PATH: /out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
           RUST_LOG: info,error,warn
           TEST_NO_ARGS: false
+          SAMPLES: 10
 
       - name: Commit and Push Changes
         run: |

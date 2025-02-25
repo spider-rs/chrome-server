@@ -12,7 +12,6 @@ use conf::{
     DEFAULT_PORT, DEFAULT_PORT_SERVER, ENDPOINT, HOST_NAME, IS_HEALTHY, LAST_CACHE,
     LIGHTPANDA_ARGS, LIGHT_PANDA, TARGET_REPLACEMENT,
 };
-
 use core::sync::atomic::Ordering;
 use http_body_util::Full;
 use hyper::{
@@ -63,7 +62,7 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
                         connection_failed = true;
                     }
                     // empty prevent connections retrying
-                    if attempts >= 8 && CHROME_INSTANCES.lock().await.is_empty() {
+                    if attempts >= 10 && CHROME_INSTANCES.lock().await.is_empty() {
                         tracing::warn!("ConnectionRefused: {}. Attempt {} of 8", e, attempts);
                         return None;
                     }
@@ -79,12 +78,13 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
             return None;
         }
 
-        sleep(Duration::from_millis(if connection_failed {
-            150
+        let rng = rand::random_range(if connection_failed {
+            80..=150
         } else {
-            250
-        }))
-        .await;
+            150..=250
+        });
+
+        sleep(Duration::from_millis(rng)).await;
     }
 }
 

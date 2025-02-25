@@ -636,6 +636,7 @@ dependencies = [
  "lazy_static",
  "openssl",
  "openssl-sys",
+ "rand 0.9.0",
  "tokio",
  "tracing",
 ]
