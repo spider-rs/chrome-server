@@ -11,9 +11,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.50.1-noble
-      # options: --user 1001
     steps:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
@@ -29,8 +26,19 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y curl unzip sudo
+          apt-get install -y curl unzip wget gpg ca-certificates && \
+          mkdir -p /etc/apt/keyrings && \
+          curl -sL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+          echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" >> /etc/apt/sources.list.d/nodesource.list && \
+          apt-get update && \
+          apt-get install -y nodejs && \
+          # Feature-parity with node.js base images.
+          apt-get install -y --no-install-recommends git openssh-client && \
+          npm install -g yarn && \
+          # clean apt cache
+          rm -rf /var/lib/apt/lists/* && \
+          # Create the pwuser
+          adduser pwuser
 
       - name: Install Rust
         run: |
@@ -47,11 +55,12 @@ jobs:
           curl -SL https://storage.googleapis.com/chrome-for-testing-public/133.0.6943.126/linux64/chrome-headless-shell-linux64.zip -o chrome-headless-shell-linux64.zip
           unzip chrome-headless-shell-linux64.zip -d ./out/latest/headless-shell
           chmod +x ./out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
+          chmod -R 777 ./out/latest/headless-shell/chrome-headless-shell-linux64
           npx playwright install-deps chromium
 
       - name: Run Tests
         run: |
-          CHROME_PATH=./out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell cargo test --package headless_browser --test cdp
+          cargo test --package headless_browser --test cdp
         env: 
           HEADLESS: true
           CHROME_PATH: ./out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
