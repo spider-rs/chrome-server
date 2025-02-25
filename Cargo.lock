@@ -89,6 +89,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
+name = "benches"
+version = "0.0.0"
+dependencies = [
+ "futures-util",
+ "headless_browser_lib",
+ "spider_chrome",
+ "tokio",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "bitflags"
 version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

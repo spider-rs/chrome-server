@@ -2,5 +2,6 @@
 members = [
     "headless_browser",
     "headless_browser_lib",
+    "benches"
 ]
 resolver = "2"

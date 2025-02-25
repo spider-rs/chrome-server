@@ -176,45 +176,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Testing and Benchmarks
 
-### Google Chrome
-
-example with Google Chrome ( reliable and fast ).
-
-```sh
-HEADLESS=true CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" cargo test --package headless_browser --test cdp  -- --nocapture
-# NewPage(https://example.com): 172.977417ms
-# WaitForNavigationAndContent(https://example.com): 834.417µs
-# NewPage(https://spider.cloud): 510.849ms
-# WaitForNavigationAndContent(https://spider.cloud): 24.371167ms
-# Time took: 943.520375ms
-```
-
-### Chrome Headless Shell
-
-example with Google Chrome headless-shell: (4x faster).
-
-```sh
- HEADLESS=true CHROME_PATH=./chrome-headless-shell/chromium_headless_shell-1155/chrome-mac/headless_shell cargo test --package headless_browser --test cdp  -- --nocapture
-# NewPage(https://example.com): 51.755125ms
-# WaitForNavigationAndContent(https://example.com): 840.084µs
-# NewPage(https://spider.cloud): 221.127334ms
-# WaitForNavigationAndContent(https://spider.cloud): 22.51475ms
-# Time took: 270.031125ms
-```
-
-### Brave Browser
-
-example with brave(20x slower).
-
-```sh
-HEADLESS=true CHROME_PATH="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" cargo test --package headless_browser --test cdp  -- --nocapture
-# tracing_subscriber - init success
-# NewPage(https://example.com): 330.683583ms
-# WaitForNavigationAndContent(https://example.com): 6.106042ms
-# NewPage(https://spider.cloud): 5.562166083s
-# WaitForNavigationAndContent(https://spider.cloud): 26.116667ms
-# Time took: 11.003418416s
-```
+View the [benches](./benches/README.md) to see the performance between browsers for headless.
 
 ## License
 

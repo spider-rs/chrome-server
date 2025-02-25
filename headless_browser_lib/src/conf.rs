@@ -1,6 +1,9 @@
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
+/// The performance arg count.
+pub(crate) const PERF_ARGS: usize = 92;
+
 #[cfg(test)]
 lazy_static::lazy_static! {
     /// The chrome args to use test ( basic without anything used for testing ).
@@ -108,7 +111,7 @@ lazy_static::lazy_static! {
         || CHROME_PATH.ends_with("lightpanda-x86_64-linux")
     };
     /// The chrome args to use.
-    pub static ref CHROME_ARGS: [&'static str; 91] = {
+    pub static ref CHROME_ARGS: [&'static str; PERF_ARGS] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -223,6 +226,7 @@ lazy_static::lazy_static! {
             "--font-render-hinting=none",
             "--block-new-web-contents",
             "--no-subproc-heap-profiling",
+            "--deterministic-mode",
             "--no-pre-read-main-dll",
             "--disable-stack-profiler",
             "--crash-on-hang-threads",

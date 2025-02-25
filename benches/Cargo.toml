@@ -1,0 +1,17 @@
+[package]
+name = "benches"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[dependencies]
+headless_browser_lib = { path = "../headless_browser_lib" }
+futures-util = "0.3"
+spider_chrome = "2"
+tokio = { version = "1", features = ["full"] }
+tracing-subscriber = "0.3"
+
+[[bench]]
+name = "basic"
+path = "basic.rs"
+harness = false
