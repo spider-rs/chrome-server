@@ -11,12 +11,13 @@ use std::{
 };
 
 const LOG_DIR: &str = "logs";
-const LOG_FILE_NAME: &str = "benchmark_logs.txt";
+const LOG_FILE_NAME: &str = "benchmark_noargs_logs.txt";
 const SAMPLE_COUNT: u32 = 10;
 
 #[tokio::main]
 async fn main() {
     set_var("CHROME_INIT", "ignore"); // Ignore the auto start.
+    set_var("TEST_NO_ARGS", "true");
     ensure_log_directory_exists(LOG_DIR).expect("Failed to create log directory");
     let query = env::var("BENCH_URL").unwrap_or_else(|_| "http://spider.cloud".into());
     let mut total_duration = Duration::new(0, 0);
@@ -71,8 +72,8 @@ fn log_performance(current_avg: Duration, query: &str) -> io::Result<()> {
     {
         let chrome_args = format!(
             "({})({:?})",
-            headless_browser_lib::conf::CHROME_ARGS.len(),
-            headless_browser_lib::conf::CHROME_ARGS.join(",")
+            headless_browser_lib::conf::CHROME_ARGS_TEST.len(),
+            headless_browser_lib::conf::CHROME_ARGS_TEST.join(",")
         );
         let chrome_path = headless_browser_lib::conf::CHROME_PATH
             .trim_end_matches('/')
@@ -81,7 +82,6 @@ fn log_performance(current_avg: Duration, query: &str) -> io::Result<()> {
             .file_name()
             .and_then(|s| s.to_str())
             .unwrap_or_default();
-
         let last_benchmark = get_last_benchmark(&log_file)?;
 
         if let Some(last_avg) = last_benchmark {
@@ -139,7 +139,6 @@ fn parse_duration(s: &str) -> io::Result<Duration> {
         ))
     }
 }
-
 async fn navigate_extract_and_close(u: &str) -> Result<(), Box<dyn std::error::Error>> {
     let (browser, mut handler) =
         Browser::connect_with_config("http://127.0.0.1:6000/json/version", Default::default())

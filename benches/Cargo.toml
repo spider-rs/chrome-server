@@ -5,13 +5,19 @@ publish = false
 edition = "2021"
 
 [dependencies]
-headless_browser_lib = { path = "../headless_browser_lib" }
+headless_browser_lib = { path = "../headless_browser_lib", features = ["testing"] }
 futures-util = "0.3"
 spider_chrome = "2"
 tokio = { version = "1", features = ["full"] }
-tracing-subscriber = "0.3"
+chrono = "0.4" 
+sys-info = "0.9"
 
 [[bench]]
 name = "basic"
 path = "basic.rs"
+harness = false
+
+[[bench]]
+name = "basic_no_args"
+path = "basic_no_args.rs"
 harness = false

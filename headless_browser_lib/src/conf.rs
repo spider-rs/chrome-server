@@ -4,10 +4,10 @@ use std::sync::atomic::{AtomicBool, AtomicU64};
 /// The performance arg count.
 pub(crate) const PERF_ARGS: usize = 92;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 lazy_static::lazy_static! {
     /// The chrome args to use test ( basic without anything used for testing ).
-    pub(crate) static ref CHROME_ARGS_TEST: [&'static str; 7] = {
+    pub static ref CHROME_ARGS_TEST: [&'static str; 6] = {
         let headless = std::env::args()
         .nth(6)
         .unwrap_or("true".into());
@@ -62,8 +62,6 @@ lazy_static::lazy_static! {
             gpu_enabled,
             gpu_enabled_sandboxed,
             use_gl,
-            // fast forward time on non headless-shell. Confirmed working for chromium builds.
-            if *BRAVE_INSTANCE { "--virtual-time-budget=60000" } else { "" },
         ]
     };
 }
@@ -166,8 +164,6 @@ lazy_static::lazy_static! {
             gpu_enabled,
             gpu_enabled_sandboxed,
             use_gl,
-            // fast forward time on non headless-shell. Confirmed working for chromium builds.
-            if *BRAVE_INSTANCE { "--virtual-time-budget=60000" } else { "" },
             "--no-first-run",
             "--no-sandbox",
             "--disable-setuid-sandbox",
@@ -213,9 +209,11 @@ lazy_static::lazy_static! {
             "--disable-popup-blocking",
             "--disable-hang-monitor",
             "--disable-checker-imaging",
+            "--enable-surface-synchronization",
             "--disable-image-animation-resync",
             "--disable-client-side-phishing-detection",
             "--disable-component-extensions-with-background-pages",
+            "--run-all-compositor-stages-before-draw",
             "--disable-background-networking",
             "--disable-renderer-backgrounding",
             "--disable-field-trial-config",
@@ -226,7 +224,6 @@ lazy_static::lazy_static! {
             "--font-render-hinting=none",
             "--block-new-web-contents",
             "--no-subproc-heap-profiling",
-            "--deterministic-mode",
             "--no-pre-read-main-dll",
             "--disable-stack-profiler",
             "--crash-on-hang-threads",
@@ -252,8 +249,9 @@ lazy_static::lazy_static! {
             "--disable-webrtc",
             "--disable-blink-features=AutomationControlled",
             "--disable-ipc-flooding-protection", // we do not need to throttle navigation for https://github.com/spider-rs/spider/commit/9ff5bbd7a2656b8edb84b62843b72ae9d09af079#diff-75ce697faf0d37c3dff4a3a19e7524798b3cb5487f8f54beb5d04c4d48e34234R446.
+            // --deterministic-mode 20-30% drop in perf
             // "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
-            "--disable-features=PaintHolding,HttpsUpgrades,DeferRendererTasksAfterInput,LensOverlay,ThirdPartyStoragePartitioning,IsolateSandboxedIframes,ProcessPerSiteUpToMainFrameThreshold,site-per-process,WebUIJSErrorReportingExtended,DIPS,InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate"
+            "--disable-features=PaintHolding,HttpsUpgrades,DeferRendererTasksAfterInput,LensOverlay,ThirdPartyStoragePartitioning,IsolateSandboxedIframes,ProcessPerSiteUpToMainFrameThreshold,site-per-process,WebUIJSErrorReportingExtended,DIPS,InterestFeedContentSuggestions,PrivacySandboxSettings4,AutofillServerCommunication,CalculateNativeWinOcclusion,OptimizationHints,AudioServiceOutOfProcess,IsolateOrigins,ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate",
         ]
     };
 
@@ -316,7 +314,7 @@ lazy_static::lazy_static! {
         format!("http://127.0.0.1:{}/json/version", *DEFAULT_PORT)
     };
     /// The chrome launch path.
-    pub(crate) static ref CHROME_PATH: String = {
+    pub static ref CHROME_PATH: String = {
         let default_path = std::env::args().nth(1).unwrap_or_default();
 
         // handle testing and default to OS

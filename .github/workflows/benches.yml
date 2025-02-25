@@ -45,20 +45,6 @@ jobs:
           sudo chmod +x /out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
           sudo chmod -R 777 /out
           npx playwright install-deps chromium
-
-      - name: Test Chrome Installation
-        run: |
-          /out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell \
-          --headless \
-          --no-sandbox \
-          --disable-gpu \
-          --dump-dom https://www.example.com \
-          > test_output.txt
-          if grep -q "Example Domain" test_output.txt; then
-            echo "Chrome headless shell is functioning properly."
-          else
-            echo "Failed to run Chrome headless shell." && exit 1
-          fi
           
       - name: Run Benches
         run: |
@@ -68,3 +54,13 @@ jobs:
           CHROME_PATH: /out/latest/headless-shell/chrome-headless-shell-linux64/chrome-headless-shell
           RUST_LOG: info,error,warn
           TEST_NO_ARGS: false
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add benches/logs/
+          git commit -m "Update benchmark logs" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
