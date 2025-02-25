@@ -46,7 +46,7 @@ HEADLESS=true CHROME_PATH="/Applications/Brave Browser.app/Contents/MacOS/Brave 
 # Time took: 5.972425416s
 ```
 
-## Benches
+## Running
 
 When you run the benches make sure to pass in the CHROME_PATH env.
 
@@ -54,12 +54,17 @@ When you run the benches make sure to pass in the CHROME_PATH env.
 HEADLESS=true CHROME_PATH=./chrome-headless-shell/chromium_headless_shell-1155/chrome-mac/headless_shell cargo bench
 ```
 
-## Logs
+## Benchmarks
 
-View the [logs](./logs/) to see the runs with the machine used and history of the args for the performance.
-The `noargs_log` has the headless instance launched with minimal args required to run.
+View the [benchmarks](./logs/) to see the runs with the machine used and history of the args for the performance.
+The `Argless` has the headless instance launched with minimal args required to run.
 
 ### Mac
 
-[Darwin_v10cpu_benchmark_logs.txt](./logs/Darwin_v10cpu_benchmark_logs.txt)
-[Darwin_v10cpu_benchmark_noargs_logs.txt](./logs/Darwin_v10cpu_benchmark_noargs_logs.txt)
+* [Darwin_v10cpu](./logs/Darwin_v10cpu_benchmark_logs.txt)
+* [Darwin_v10cpu Argless](./logs/Darwin_v10cpu_benchmark_noargs_logs.txt)
+
+### Linux
+
+* [Linux_v4cpu](./logs/Linux_v4cpu_benchmark_logs.txt)
+* [Linux_v4cpu Argless](./logs/Linux_v4cpu_benchmark_noargs_logs.txt)
