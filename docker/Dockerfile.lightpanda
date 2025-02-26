@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS pandabuilder
+FROM ubuntu:25.04 AS pandabuilder
 
 ARG ZIG=0.13.0
 ARG ZIG_MINISIG=RWSGOq2NVecA2UPNdBUZykf1CCb147pkmdtYxgb3Ti+JO/wCYvhbAb/U
@@ -67,7 +67,7 @@ RUN curl -L -o libc_v8.a https://github.com/lightpanda-io/zig-v8-fork/releases/d
 # build release
 RUN make build
 
-FROM ubuntu:22.04 AS rustbuilder
+FROM ubuntu:25.04 AS rustbuilder
 
 WORKDIR /app
 
@@ -81,10 +81,10 @@ COPY ../headless_browser_lib/ ./headless_browser_lib
 COPY ../benches/ ./benches
 COPY ../Cargo.* .
 
-RUN rustup update stable
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source $HOME/.cargo/env && rustup update stable
 RUN RUST_LOG=error cargo install --no-default-features --path headless_browser
 
-FROM ubuntu:22.04
+FROM ubuntu:25.04
 
 ARG VERSION=latest
 
