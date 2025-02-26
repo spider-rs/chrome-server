@@ -39,16 +39,17 @@ ARG VERSION=latest
 COPY ../local.conf /etc/fonts/local.conf
 
 # https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/server/registry/nativeDeps.ts#L37
+# https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/chameleon/updatable/apt-clone/raspberrypi/var/lib/apt-clone/installed.pkgs;l=472?q=libwebp6&sq=
 RUN apt-get update && apt-get install --no-install-recommends -y \
     libasound2t64 tini curl ca-certificates libfreetype6 \
     libnspr4 libnss3 libexpat1 libgbm1 libfontconfig1 glib2.0 libatk1.0-0 \
     fonts-liberation fonts-noto-color-emoji libatspi2.0-0 \
     libc6 libcairo2 libcups2 libdbus-1-3 \
     libgcc1 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libpango-1.0-0 \
-    libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 \
+    libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libevdev2 \
     libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 \
-    fonts-liberation libatk-bridge2.0-0 libdrm2 libjpeg-turbo8 fonts-unifont \
-    fonts-ipafont-gothic xfonts-cyrillic xfonts-scalable libxml2
+    fonts-liberation libatk-bridge2.0-0 libdrm2 libjpeg-turbo8 fonts-unifont libwebpdemux2 \
+    fonts-ipafont-gothic xfonts-cyrillic xfonts-scalable libxml2 libepoxy0 bzip2 libatomic1 libgl1 libgles2 libopengl0 
 
 # Add Chrome as a user
 RUN mkdir -p /usr/src/app \
