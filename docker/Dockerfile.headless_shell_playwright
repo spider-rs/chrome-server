@@ -1,11 +1,12 @@
-FROM mcr.microsoft.com/playwright:v1.50.1-noble AS rustbuilder
+FROM ubuntu:25.04 AS rustbuilder
 
 WORKDIR /app
 
 # Get Ubuntu packages
 RUN apt-get update && apt-get install -y \
     build-essential \
-    bash
+    bash curl \
+    && apt-get update
 
 COPY ../headless_browser/ ./headless_browser
 COPY ../headless_browser_lib/ ./headless_browser_lib
@@ -18,7 +19,7 @@ RUN rustup update stable
 
 RUN RUST_LOG=error cargo install --no-default-features --path headless_browser
 
-FROM mcr.microsoft.com/playwright:v1.50.1-noble
+FROM ubuntu:25.04 AS chromebuilder
 
 ARG VERSION=latest
 
@@ -27,9 +28,26 @@ COPY ../local.conf /etc/fonts/local.conf
 
 RUN apt-get update && apt-get install -y \
     build-essential \
-    tini curl
+    tini curl gpg ca-certificates npm
 
 RUN ./build-unpatched.sh
+
+FROM ubuntu:25.04
+
+ARG VERSION=latest
+
+COPY ../local.conf /etc/fonts/local.conf
+
+# https://github.com/microsoft/playwright/blob/main/packages/playwright-core/src/server/registry/nativeDeps.ts#L37
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    libasound2t64 tini curl ca-certificates libfreetype6 \
+    libnspr4 libnss3 libexpat1 libgbm1 libfontconfig1 glib2.0 libatk1.0-0 \
+    fonts-liberation fonts-noto-color-emoji libatspi2.0-0 \
+    libc6 libcairo2 libcups2 libdbus-1-3 \
+    libgcc1 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libpango-1.0-0 \
+    libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 \
+    libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 \
+    fonts-liberation libatk-bridge2.0-0 libdrm2 libjpeg-turbo8
 
 # Add Chrome as a user
 RUN mkdir -p /usr/src/app \
@@ -41,6 +59,7 @@ EXPOSE 9222 6000 9223
 USER root
 
 COPY --from=rustbuilder /root/.cargo/bin/headless_browser /usr/local/bin/headless_browser
+COPY --from=chromebuilder /out/latest/headless-shell /out/latest/headless-shell/
 COPY ../scripts/docker-entrypoint.sh /
 
 RUN chmod +x /docker-entrypoint.sh
