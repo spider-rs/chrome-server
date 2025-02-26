@@ -22,3 +22,29 @@ DATE: 2025-02-25 23:34:21
 Total Duration: 4.252429458s
 Average Duration: 3.912185341s
 
+<http://spider.cloud> - 20 SAMPLES
+CHROME_PATH: headless_shell
+CHROME_ARGS: (6)("--remote-debugging-address=0.0.0.0,--remote-debugging-port=9223,--headless,--disable-gpu,--disable-gpu-sandbox,--use-gl=angle")
+MACHINE: Darwin/v10cpu
+DATE: 2025-02-26 05:28:38
+Total Duration: 1.195677s
+Average Duration: 761.019604ms
+
+<http://spider.cloud> - 20 SAMPLES
+CHROME_PATH: headless_shell
+CHROME_ARGS: (6)("--remote-debugging-address=0.0.0.0,--remote-debugging-port=9223,--headless,--disable-gpu,--disable-gpu-sandbox,--use-gl=angle")
+MACHINE: Darwin/v10cpu
+DATE: 2025-02-26 05:33:24
+Total Duration: 1.208197125s
+Average Duration: 760.903531ms
+
+<http://spider.cloud> - 10 SAMPLES
+CHROME_PATH: headless_shell
+CHROME_ARGS: (6)("--remote-debugging-address=0.0.0.0,--remote-debugging-port=9223,--headless,--disable-gpu,--disable-gpu-sandbox,--use-gl=angle")
+MACHINE: Darwin/v10cpu
+DATE: 2025-02-26 05:34:13
+Total Duration: 576.73775ms
+Average Duration: 368.845141ms
+
+
+

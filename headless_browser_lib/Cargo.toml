@@ -23,6 +23,8 @@ openssl-sys = { version = "0.9", features = ["vendored"] }
 cached = { version = "0", features = ["async_tokio_rt_multi_thread"]}
 tracing = "0.1"
 rand = "0.9"
+num_cpus = "1"
+sysinfo = "0.33"
 
 [features]
 testing = []

@@ -6,6 +6,8 @@ pub mod conf;
 mod modify;
 /// Proxy forwarder TCP to chrome instances.
 pub mod proxy;
+/// Chrome renderer configuration.
+mod render_conf;
 
 use conf::{
     CACHEABLE, CHROME_ADDRESS, CHROME_ARGS, CHROME_INSTANCES, CHROME_PATH, DEBUG_JSON,
