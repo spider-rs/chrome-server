@@ -364,6 +364,34 @@ lazy_static::lazy_static! {
     pub(crate) static ref DEBUG_JSON: bool = std::env::var("DEBUG_JSON").unwrap_or_default() == "true";
     /// Test headless without args.
     pub(crate) static ref TEST_NO_ARGS: bool = std::env::var("TEST_NO_ARGS").unwrap_or_default() == "true";
+    /// Entry port to the proxy.
+    pub(crate) static ref ENTRY: &'static str = {
+        if crate::TARGET_REPLACEMENT.0 == b":9223" {
+            "0.0.0.0:9222"
+        } else {
+            "0.0.0.0:9223"
+        }
+    };
+    /// Target chrome server.
+    pub(crate) static ref TARGET: &'static str = {
+        if crate::TARGET_REPLACEMENT.1 == b":9222" {
+            "0.0.0.0:9223"
+        } else {
+            "0.0.0.0:9224"
+        }
+    };
+    /// The buffer size.
+    pub(crate) static ref BUFFER_SIZE: usize = {
+        let buffer_size = std::env::var("BUFFER_SIZE")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(131072); // Default to 128kb
+        buffer_size
+    };
+    /// 10 sec cache
+    pub(crate) static ref TEN_SECONDS: std::time::Duration = {
+        std::time::Duration::from_secs(10)
+    };
 }
 
 /// Get the default chrome bin location per OS.

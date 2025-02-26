@@ -1,39 +1,5 @@
-use std::time::Duration;
-
-lazy_static::lazy_static! {
-    /// Entry port to the proxy.
-    static ref ENTRY: &'static str = {
-        if crate::TARGET_REPLACEMENT.0 == b":9223" {
-            "0.0.0.0:9222"
-        } else {
-            "0.0.0.0:9223"
-        }
-    };
-    /// Target chrome server.
-    static ref TARGET: &'static str = {
-        if crate::TARGET_REPLACEMENT.1 == b":9222" {
-            "0.0.0.0:9223"
-        } else {
-            "0.0.0.0:9224"
-        }
-    };
-    /// The buffer size.
-    static ref BUFFER_SIZE: usize = {
-        let buffer_size = std::env::var("BUFFER_SIZE")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .unwrap_or(131072); // Default to 128kb
-        buffer_size
-    };
-
-    /// 10 sec cache
-    static ref TEN_SECONDS: Duration = {
-        Duration::from_secs(10)
-    };
-
-}
-
 pub(crate) mod proxy {
+    use crate::conf::{BUFFER_SIZE, ENTRY, TARGET, TEN_SECONDS};
     use crate::{connect_with_retries, fork, shutdown_instances, CACHEABLE, LAST_CACHE};
     use std::{io::ErrorKind, time::Instant};
     use tokio::{
@@ -43,8 +9,8 @@ pub(crate) mod proxy {
 
     /// Run the proxy forwarder for chrome. This allows connecting to chrome outside of the network.
     pub async fn run_proxy() -> std::io::Result<()> {
-        let listener = TcpListener::bind(*crate::proxy::ENTRY).await?;
-        println!("Proxy Listening on {}", *crate::proxy::ENTRY);
+        let listener = TcpListener::bind(*ENTRY).await?;
+        println!("Proxy Listening on {}", *ENTRY);
         let base_time = Instant::now();
 
         loop {
@@ -81,7 +47,7 @@ pub(crate) mod proxy {
                         let total_elapsed =
                             tokio::time::Duration::from_secs(elasped) + elapsed_since_base;
 
-                        if total_elapsed >= *crate::proxy::TEN_SECONDS {
+                        if total_elapsed >= *TEN_SECONDS {
                             CACHEABLE.store(true, std::sync::atomic::Ordering::Relaxed);
                         }
                     }
@@ -97,10 +63,10 @@ pub(crate) mod proxy {
 
     /// Handle the proxy connection.
     async fn handle_connection(client_stream: &mut TcpStream) -> std::io::Result<()> {
-        let server_stream: Option<TcpStream> = connect_with_retries(*crate::proxy::TARGET).await;
+        let server_stream: Option<TcpStream> = connect_with_retries(*TARGET).await;
 
         if let Some(mut server_stream) = server_stream {
-            let buffer_size = *crate::proxy::BUFFER_SIZE;
+            let buffer_size = *BUFFER_SIZE;
             let mut buf1 = vec![0u8; buffer_size];
             let mut buf2 = vec![0u8; buffer_size];
 

@@ -81,6 +81,7 @@ COPY ../headless_browser_lib/ ./headless_browser_lib
 COPY ../benches/ ./benches
 COPY ../Cargo.* .
 
+RUN rustup update stable
 RUN RUST_LOG=error cargo install --no-default-features --path headless_browser
 
 FROM ubuntu:22.04
