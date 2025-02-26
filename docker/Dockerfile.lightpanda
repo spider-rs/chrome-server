@@ -74,14 +74,16 @@ WORKDIR /app
 # Get Ubuntu packages
 RUN apt-get update && apt-get install -y \
     build-essential \
-    cargo
+    curl
 
 COPY ../headless_browser/ ./headless_browser
 COPY ../headless_browser_lib/ ./headless_browser_lib
 COPY ../benches/ ./benches
 COPY ../Cargo.* .
 
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source $HOME/.cargo/env && rustup update stable
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN rustup update stable
 RUN RUST_LOG=error cargo install --no-default-features --path headless_browser
 
 FROM ubuntu:25.04
