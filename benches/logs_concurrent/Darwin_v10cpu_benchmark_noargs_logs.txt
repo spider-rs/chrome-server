@@ -2,38 +2,23 @@
 CHROME_PATH: headless_shell
 CHROME_ARGS: (6)("--remote-debugging-address=0.0.0.0,--remote-debugging-port=9223,--headless,--disable-gpu,--disable-gpu-sandbox,--use-gl=angle")
 MACHINE: Darwin/v10cpu
-DATE: 2025-02-25 09:49:33
-Average Duration: 170.837966ms
+DATE: 2025-02-25 23:33:31
+Total Duration: 623.24175ms
+Average Duration: 387.092666ms
+
+<http://spider.cloud> - 20 SAMPLES
+CHROME_PATH: headless_shell
+CHROME_ARGS: (6)("--remote-debugging-address=0.0.0.0,--remote-debugging-port=9223,--headless,--disable-gpu,--disable-gpu-sandbox,--use-gl=angle")
+MACHINE: Darwin/v10cpu
+DATE: 2025-02-25 23:33:51
+Total Duration: 1.150761333s
+Average Duration: 695.616285ms
 
 <http://spider.cloud> - 50 SAMPLES
 CHROME_PATH: headless_shell
 CHROME_ARGS: (6)("--remote-debugging-address=0.0.0.0,--remote-debugging-port=9223,--headless,--disable-gpu,--disable-gpu-sandbox,--use-gl=angle")
 MACHINE: Darwin/v10cpu
-DATE: 2025-02-25 15:04:43
-Total Duration: 4.126866167s
-Average Duration: 3.754067105s
-
-<http://spider.cloud> - 25 SAMPLES
-CHROME_PATH: headless_shell
-CHROME_ARGS: (6)("--remote-debugging-address=0.0.0.0,--remote-debugging-port=9223,--headless,--disable-gpu,--disable-gpu-sandbox,--use-gl=angle")
-MACHINE: Darwin/v10cpu
-DATE: 2025-02-25 15:06:25
-Total Duration: 1.688262667s
-Average Duration: 1.151223173s
-
-<http://spider.cloud> - 15 SAMPLES
-CHROME_PATH: headless_shell
-CHROME_ARGS: (6)("--remote-debugging-address=0.0.0.0,--remote-debugging-port=9223,--headless,--disable-gpu,--disable-gpu-sandbox,--use-gl=angle")
-MACHINE: Darwin/v10cpu
-DATE: 2025-02-25 15:07:05
-Total Duration: 839.65475ms
-Average Duration: 532.685644ms
-
-<http://spider.cloud> - 6 SAMPLES
-CHROME_PATH: headless_shell
-CHROME_ARGS: (6)("--remote-debugging-address=0.0.0.0,--remote-debugging-port=9223,--headless,--disable-gpu,--disable-gpu-sandbox,--use-gl=angle")
-MACHINE: Darwin/v10cpu
-DATE: 2025-02-25 15:07:24
-Total Duration: 513.7985ms
-Average Duration: 401.752354ms
+DATE: 2025-02-25 23:34:21
+Total Duration: 4.252429458s
+Average Duration: 3.912185341s
 
