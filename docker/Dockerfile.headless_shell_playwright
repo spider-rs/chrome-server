@@ -28,7 +28,7 @@ COPY ../local.conf /etc/fonts/local.conf
 
 RUN apt-get update && apt-get install -y \
     build-essential \
-    tini curl gpg ca-certificates npm
+    tini curl npm
 
 RUN ./build-unpatched.sh
 
