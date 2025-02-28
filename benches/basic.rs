@@ -1,5 +1,6 @@
 mod run;
 mod run_concurrent;
+mod utils;
 
 use std::env::set_var;
 
@@ -14,7 +15,7 @@ async fn main() {
         .parse::<u32>()
         .unwrap_or(10);
 
-    headless_browser_lib::fork(Some(*headless_browser_lib::conf::DEFAULT_PORT)).await;
+    headless_browser_lib::fork(Some(*headless_browser_lib::conf::DEFAULT_PORT));
     let task = tokio::spawn(headless_browser_lib::run_main());
     tokio::time::sleep(std::time::Duration::from_millis(1000)).await; // Wait for the server to load.
     run::run(LOG_FILE_NAME, samples).await;

@@ -10,7 +10,7 @@ use std::{
 async fn basic() -> Result<(), Box<dyn std::error::Error>> {
     set_var("CHROME_INIT", "ignore"); // ignore the auto start
     tracing_subscriber::fmt::init();
-    headless_browser_lib::fork(Some(*headless_browser_lib::conf::DEFAULT_PORT)).await;
+    headless_browser_lib::fork(Some(*headless_browser_lib::conf::DEFAULT_PORT));
     let task = tokio::spawn(headless_browser_lib::run_main());
     tokio::time::sleep(Duration::from_millis(100)).await; // give a slight delay for now until we use a oneshot.
 

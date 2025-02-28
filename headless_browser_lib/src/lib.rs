@@ -52,7 +52,8 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
     let mut connection_failed = false;
 
     loop {
-        match timeout(Duration::from_secs(7), TcpStream::connect(address)).await {
+        // 15s is the default restart timeout chrome flag.
+        match timeout(Duration::from_secs(15), TcpStream::connect(address)).await {
             Ok(Ok(stream)) => return Some(stream),
             Ok(Err(e)) => {
                 attempts += 1;
@@ -64,7 +65,7 @@ async fn connect_with_retries(address: &str) -> Option<TcpStream> {
                         connection_failed = true;
                     }
                     // empty prevent connections retrying
-                    if attempts >= 10 && CHROME_INSTANCES.lock().await.is_empty() {
+                    if attempts >= 10 && CHROME_INSTANCES.is_empty() {
                         tracing::warn!("ConnectionRefused: {}. Attempt {} of 8", e, attempts);
                         return None;
                     }
@@ -117,7 +118,7 @@ pub fn get_chrome_args_test() -> [&'static str; crate::conf::PERF_ARGS] {
 }
 
 /// Fork a chrome process.
-pub async fn fork(port: Option<u32>) -> String {
+pub fn fork(port: Option<u32>) -> String {
     let id = if !*LIGHT_PANDA {
         let mut command = Command::new(&*CHROME_PATH);
 
@@ -181,7 +182,7 @@ pub async fn fork(port: Option<u32>) -> String {
         id
     };
 
-    CHROME_INSTANCES.lock().await.insert(id.into());
+    CHROME_INSTANCES.insert(id.into());
 
     id.to_string()
 }
@@ -278,7 +279,7 @@ async fn health_check_handler() -> Result<Response<Full<Bytes>>, Infallible> {
 
 /// Fork handler.
 async fn fork_handler(port: Option<u32>) -> Result<Response<Full<Bytes>>, Infallible> {
-    let pid = fork(port).await;
+    let pid = fork(port);
     let pid = format!("Forked process with pid: {}", pid);
 
     Ok(Response::new(Full::new(Bytes::from(pid))))
@@ -292,7 +293,8 @@ async fn json_version_handler(
     let mut body: Option<Bytes> = None;
     let mut checked_empty = false;
 
-    while attempts < 10 && body.is_none() {
+    // check if the instances are alive.
+    while attempts < 10 && body.is_none() && !CHROME_INSTANCES.is_empty() {
         body = if CACHEABLE.load(Ordering::Relaxed) {
             version_handler_bytes(endpoint_path).await
         } else {
@@ -303,12 +305,15 @@ async fn json_version_handler(
             // check the first instance.
             if !checked_empty {
                 checked_empty = true;
-                if CHROME_INSTANCES.lock().await.is_empty() {
+                if CHROME_INSTANCES.is_empty() {
                     break;
                 }
             }
             attempts += 1;
-            tokio::time::sleep(Duration::from_millis(25)).await;
+
+            let rng = rand::random_range(if checked_empty { 10..=50 } else { 20..=80 });
+
+            tokio::time::sleep(Duration::from_millis(rng)).await;
         }
     }
 
@@ -335,13 +340,10 @@ async fn json_version_handler(
 
 /// Shutdown all the chrome instances launched.
 pub async fn shutdown_instances() {
-    let mut mutx = CHROME_INSTANCES.lock().await;
-
-    for pid in mutx.iter() {
-        shutdown(pid);
+    for pid in CHROME_INSTANCES.iter() {
+        shutdown(&pid);
     }
-
-    mutx.clear();
+    CHROME_INSTANCES.clear();
     CACHEABLE.store(false, std::sync::atomic::Ordering::Relaxed);
 }
 
@@ -399,7 +401,7 @@ pub async fn run_main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> 
     });
 
     if auto_start == "init" {
-        fork(Some(*DEFAULT_PORT)).await;
+        fork(Some(*DEFAULT_PORT));
     }
 
     let addr = SocketAddr::new(

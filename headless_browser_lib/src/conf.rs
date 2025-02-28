@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
 /// The performance arg count.
@@ -69,7 +68,7 @@ lazy_static::lazy_static! {
 lazy_static::lazy_static! {
     /// Is the instance healthy?
     pub static ref IS_HEALTHY: AtomicBool = AtomicBool::new(true);
-    pub static ref CHROME_INSTANCES: tokio::sync::Mutex<HashSet<u32>> = tokio::sync::Mutex::new(HashSet::new());
+    pub static ref CHROME_INSTANCES: dashmap::DashSet<u32> = dashmap::DashSet::new();
     pub static ref DEFAULT_PORT: u32 = {
         let default_port = std::env::args()
             .nth(4)

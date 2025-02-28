@@ -1,30 +1,34 @@
 # headless-browser
 
-Headless Browser with Proxy and Server.
+The `headless-browser` crate offers a scalable solution for managing headless Chrome instances with integrated proxy and server support. This system is designed to optimize resource utilization and enhance performance for large-scale web automation tasks.
 
 ## Installation
 
-Make sure to have [Rust](https://www.rust-lang.org/learn/get-started) installed.
+Make sure you have [Rust](https://www.rust-lang.org/learn/get-started) installed before proceeding.
 
-`cargo install headless_browser`
+```sh
+cargo install headless_browser
+```
 
 ## Usage
 
-1. Runs the latest browser instance with remote proxy connections and a server that can rewrite json/version for networking.
-1. Can spawn and shutdown multiple headless instances manually and automatically on errors.
-1. Get CDP ws connections and status (caches values for perf).
+1. Launches the most recent browser instance, supporting remote proxy connections and a server for `json/version` rewrites to facilitate networking.
+2. Allows manual and automatic spawning and termination of multiple headless instances, including error handling functionalities.
+3. Provides access to Chrome DevTools Protocol (CDP) WebSocket connections and status, caching values for improved performance.
 
-The current instance binds chrome to 0.0.0.0 when starting via API.
+By default, the instance binds Chrome to `0.0.0.0` when initialized via the API.
 
-Use the env variable `REMOTE_ADDRESS` to change the address of the chrome instance between physical or network.
+Use the `REMOTE_ADDRESS` environment variable to specify the desired address for the Chrome instance, whether local or networked.
 
-The application will pass lb health checks when using port `6000` to get the status of the chromium container.
+The application passes load balancer health checks on port `6000`, providing the status of the Chrome container.
 
-A side loaded application is required to run chromium on a load balancer, one of the main purposes of the server.
+To run Chrome on a load balancer, a companion application is required, which is a primary function of the server.
 
-The default port is `9223` for chromium and `9222` for the TCP proxy to connect to the instance due to `0.0.0.0` not being exposed on latest `HeadlessChrome/131.0.6778.139` and up.
+The default port configuration includes `9223` for Chrome and `9222` for the TCP proxy, in response to `0.0.0.0` not being exposed in recent versions like `HeadlessChrome/131.0.6778.139` and newer.
 
-It is recommended to use the `headless_shell_playwright` docker build or [chrome-headless-shell](https://storage.googleapis.com/chrome-for-testing-public/134.0.6998.23/linux64/chrome-headless-shell-linux64.zip) for web scraping (headless-shell is x10 times faster than headless = new).
+For web scraping, we suggest using our [Headless Shell Dockerfile](./docker/Dockerfile.headless_shell_playwright) or downloading the [chrome-headless-shell](https://storage.googleapis.com/chrome-for-testing-public/134.0.6998.23/linux64/chrome-headless-shell-linux64.zip). The headless-shell offers significantly faster performance compared to the standard headless mode. Additionally, our Docker image is remarkably compact for the chrome-headless-shell, thanks to a multi-stage build process that installs only the essential components, resulting in a size of just 300 MB compared to Playwright's traditional 1.2 GB default.
+
+---
 
 ## API
 

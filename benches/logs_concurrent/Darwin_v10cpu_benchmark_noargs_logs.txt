@@ -46,5 +46,11 @@ DATE: 2025-02-26 05:34:13
 Total Duration: 576.73775ms
 Average Duration: 368.845141ms
 
-
+<http://spider.cloud> - 10 SAMPLES
+CHROME_PATH: headless_shell
+CHROME_ARGS: (6)("--remote-debugging-address=0.0.0.0,--remote-debugging-port=9223,--headless,--disable-gpu,--disable-gpu-sandbox,--use-gl=angle")
+MACHINE: Darwin/v10cpu
+DATE: 2025-02-27 21:54:44
+Total Duration: 596.303208ms
+Average Duration: 361.702ms
 

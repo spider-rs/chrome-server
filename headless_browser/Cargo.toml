@@ -1,11 +1,11 @@
 [package]
 name = "headless_browser"
-version = "0.1.9"
+version = "0.1.10"
 edition = "2021"
 authors = [
     "j-mendez <jeff@spider.cloud>"
 ]
-description = "Chrome proxy API to manage chrome in Cloud Providers"
+description = "A scalable application for managing headless Chrome instances with proxy and server capabilities."
 license = "MIT"
 repository = "https://github.com/spider-rs/chrome-server"
 documentation = "https://docs.rs/headless_browser"

@@ -27,7 +27,7 @@ pub(crate) mod proxy {
                         // send a signal instead or channel to prevent race
                         // todo: we need to swap to a new port and use a LB to track the drain to reset the ports used.
                         shutdown_instances().await;
-                        fork(Some(*crate::DEFAULT_PORT)).await;
+                        fork(Some(*crate::DEFAULT_PORT));
                         CACHEABLE.store(false, std::sync::atomic::Ordering::Relaxed);
                         LAST_CACHE.store(
                             base_time.elapsed().as_secs().try_into().unwrap_or_default(),
