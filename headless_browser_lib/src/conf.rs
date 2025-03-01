@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicBool, AtomicU64};
 
 /// The performance arg count.
-pub(crate) const PERF_ARGS: usize = 99;
+pub(crate) const PERF_ARGS: usize = 97;
 
 #[cfg(any(test, feature = "testing"))]
 lazy_static::lazy_static! {
@@ -228,8 +228,6 @@ lazy_static::lazy_static! {
             "--no-pre-read-main-dll",
             "--disable-stack-profiler",
             "--disable-libassistant-logfile",
-            "--crash-on-hang-threads",
-            "--restore-last-session",
             "--ip-protection-proxy-opt-out",
             "--unsafely-disable-devtools-self-xss-warning",
             "--enable-features=PdfOopif,SharedArrayBuffer,NetworkService,NetworkServiceInProcess",
